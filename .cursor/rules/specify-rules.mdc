@@ -1,0 +1,35 @@
+---
+description: Project Development Guidelines
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# stock-analyzer-final Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-04-24
+
+## Active Technologies
+
+- TypeScript 5.6 (Vercel Next.js 侧 strict 模式) + Python 3.12 (Sealos Scheduler 侧) + Next.js 15 (App Router), React 19, Tailwind CSS 3.4, shadcn/ui, Magic UI (MagicCard / Number Ticker / Marquee / Bento Grid), Zustand 5, Drizzle ORM, @supabase/supabase-js, @supabase/ssr (SSR 会话), next-nprogress-bar, @dnd-kit/core & @dnd-kit/sortable (自选股拖拽), @tanstack/react-virtual (虚拟滚动), lucide-react (图标)；Python 侧：FastAPI, httpx, supabase-py, apscheduler, openai (指向 DeepSeek 兼容端点) (001-initialization)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+cd src && pytest && ruff check .
+
+## Code Style
+
+TypeScript 5.6 (Vercel Next.js 侧 strict 模式) + Python 3.12 (Sealos Scheduler 侧): Follow standard conventions
+
+## Recent Changes
+
+- 001-initialization: Added TypeScript 5.6 (Vercel Next.js 侧 strict 模式) + Python 3.12 (Sealos Scheduler 侧) + Next.js 15 (App Router), React 19, Tailwind CSS 3.4, shadcn/ui, Magic UI (MagicCard / Number Ticker / Marquee / Bento Grid), Zustand 5, Drizzle ORM, @supabase/supabase-js, @supabase/ssr (SSR 会话), next-nprogress-bar, @dnd-kit/core & @dnd-kit/sortable (自选股拖拽), @tanstack/react-virtual (虚拟滚动), lucide-react (图标)；Python 侧：FastAPI, httpx, supabase-py, apscheduler, openai (指向 DeepSeek 兼容端点)
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->
