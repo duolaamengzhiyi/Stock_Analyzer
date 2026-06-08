@@ -8,7 +8,7 @@
 ## Content Quality
 
 - [x] No implementation details (languages, frameworks, APIs)
-  - 备注：Spec 中出现了 MagicUI、Kimi LLM、AKShare、CLS、Sealos 等专有
+  - 备注：Spec 中出现了 MagicUI、DeepSeek LLM、AKShare、CLS、Sealos 等专有
     名称，但这些是 **用户显式约束的产品决策**（"必须用这个数据源 / 这个组件
     库"），属于业务约束范畴，不是实现细节。Tailwind / Next.js / Drizzle
     等项目级技术栈由宪法承载，不在 spec 重复。
@@ -61,7 +61,7 @@
 ## Notes
 
 - 用户在自然语言描述中显式绑定了数据源（AKShare + AKTools via Sealos、
-  财联社 CLS）、AI 引擎（Kimi）、以及 UI 库（shadcn + MagicUI 指定组件），
+  财联社 CLS）、AI 引擎（DeepSeek）、以及 UI 库（shadcn + MagicUI 指定组件），
   这些已作为"产品级决策"进入 FR 与 Assumptions。若 Plan 阶段发现上游接口
   不可用 / 限额不达标，需要回到 spec 修订而不是在 plan 悄悄替换。
 - "启动在即"与"主升浪"的算法阈值（振幅 15% / 单日 5% / 回归斜率 0.3%；

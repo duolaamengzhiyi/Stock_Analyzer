@@ -347,7 +347,7 @@ export const sectorPicks = pgTable('sector_picks', {
   leaderCode: varchar('leader_code', { length: 6 })
     .references(() => stocks.code),
   leaderName: varchar('leader_name', { length: 32 }),
-  rationaleShort: text('rationale_short'), // 为什么入选（Kimi 一句话）
+  rationaleShort: text('rationale_short'), // 为什么入选（DeepSeek 一句话）
   generatedAt: timestamp('generated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (t) => ({
   pk: uniqueIndex('sp_date_rank_idx').on(t.tradeDate, t.rank),

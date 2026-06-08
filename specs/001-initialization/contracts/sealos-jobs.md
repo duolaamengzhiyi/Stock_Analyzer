@@ -143,14 +143,14 @@ preconditions:
   - stock_daily 最新一条 trade_date = today（说明抓取已成功）
 steps:
   1. 读 stock_daily today 的全量（从中聚合指数 / 涨跌家数 / 成交额 / 活跃板块）
-  2. 构造 prompt（用 lib/kimi/prompts.ts 镜像的 builder）
-  3. 调 Kimi LLM
+  2. 构造 prompt（用 lib/deepseek/prompts.ts 镜像的 builder）
+  3. 调 DeepSeek LLM
   4. INSERT ai_artifacts(kind='midday'|'evening', primary_key=today,
      content=<response>, generated_at=now, source_data_at=today 11:30|15:15)
   5. audit_logs: ai-generate success
   6. Realtime broadcast: event='ai-midday-done'|'ai-evening-done'
 failure_handling:
-  - Kimi 失败 → audit_logs status=failed；**不**写 ai_artifacts；下一调度窗口重试
+  - DeepSeek 失败 → audit_logs status=failed；**不**写 ai_artifacts；下一调度窗口重试
   - 前端继续显示上一版本（FR-053）
 ```
 
@@ -167,7 +167,7 @@ steps:
   2. 读最近 3 日 stock_daily 聚合市场概要
   3. 读国际 5 市场 indices（若 Scheduler 另抓了；本期可先跳过，prompt 中提及"暂无海外数据"）
   4. 构造 forecast prompt
-  5. 调 Kimi (moonshot-v1-128k，长上下文)
+  5. 调 DeepSeek (deepseek-v4-flash；1M 上下文，可注入 24h 全量 CLS + 多日行情)
   6. INSERT ai_artifacts(kind='forecast', primary_key=today, content, source_data_at=批次时间)
   7. 调用 sector_picks 子任务（下面一条）
   8. audit_logs + Realtime broadcast
@@ -202,7 +202,7 @@ steps:
 steps:
   1. 读最近 24h news_items
   2. 构造 news-summary prompt
-  3. 调 Kimi (moonshot-v1-32k)
+  3. 调 DeepSeek (deepseek-v4-flash)
   4. INSERT ai_artifacts(kind='news-summary', primary_key=batch_iso_ts)
   5. Realtime broadcast: event='news-summary-done'
 ```

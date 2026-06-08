@@ -216,7 +216,7 @@ type RealtimeState = {
 
 ## 安全考虑
 
-- Broadcast 不含敏感字段（无 userId / token / Kimi raw response），全员
+- Broadcast 不含敏感字段（无 userId / token / DeepSeek raw response），全员
   可读符合 RLS 要求
 - Realtime 频道的 RLS 策略：允许 `authenticated` 角色订阅 `data-updated`
   频道，不允许 `anon` 订阅（未登录用户在重定向后才看到 Dashboard）
