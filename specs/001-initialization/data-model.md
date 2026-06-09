@@ -15,7 +15,7 @@ generate` 从 `lib/db/schema/*.ts` 派生；Sealos Python Scheduler **只读写
 | 表名 | 用途 | 保留策略 | 写入方 |
 |------|------|--------|------|
 | `auth.users` | Supabase 自带 | 用户生命周期 | Supabase Auth |
-| `profiles` | 账号名 ↔ auth.users 映射 + 个人资料 | 永久 | Vercel（注册时） |
+| `profiles` | 站内账号名 + 个人资料（邮箱在 auth.users） | 永久 | Vercel（注册时） |
 | `long_lived_tokens` | 7 天免登录凭证 | 到期或登出失效 | Vercel |
 | `invite_codes` | 邀请码配置（当前单条） | 永久 | 手动种子 |
 | `stocks` | 股票元数据 | 永久（可软删） | Scheduler |
@@ -32,9 +32,10 @@ generate` 从 `lib/db/schema/*.ts` 派生；Sealos Python Scheduler **只读写
 
 ## 1. `profiles`
 
-Supabase Auth 的 `auth.users` 只有 `id (uuid)`, `email`, `encrypted_password`
-等系统字段；`profiles` 承载业务层的账号名与个人资料，与 `auth.users` 按
-1:1 关联。
+Supabase Auth 的 `auth.users` 保存 `id (uuid)`, `email`, `encrypted_password`,
+`email_confirmed_at` 等系统字段；`profiles` 承载业务层的站内账号名与个人资料，
+与 `auth.users` 按 1:1 关联。真实邮箱不重复写入 `profiles`，以 Supabase Auth
+为权威来源。
 
 ```ts
 // lib/db/schema/profiles.ts

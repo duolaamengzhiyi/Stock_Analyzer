@@ -41,8 +41,8 @@
     多市场节假日交叉、跨市场时区边界、交易日历陈旧、A 股休市日 AI 点评
     调度等。
 - [x] Scope is clearly bounded
-  - Assumptions 末尾明确列出"不在本次范围"的项（邮箱验证、多方登录、交易
-    执行、管理后台）。
+  - Assumptions 末尾明确列出"不在本次范围"的项（短信验证、多方登录、忘记
+    密码、交易执行、管理后台）；邮箱确认属于本期范围。
 - [x] Dependencies and assumptions identified
   - Assumptions 章节已列出数据源、时区、数据规模、AI 引擎、MagicUI
     / shadcn 的前置条件。

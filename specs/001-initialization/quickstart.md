@@ -216,23 +216,33 @@ brew install supabase/tap/supabase    # macOS
 3. 左侧 **Table Editor** → 可以看到还没有 public 表（`auth.*` 会有 Supabase
    自带的认证表）
 
-### 4.4 关掉 Email confirm（重要！）
+### 4.4 开启 Email confirm 并配置回跳 URL（重要！）
 
-因为我们用占位邮箱 `{username}@stock-analyzer.local` 注册，Supabase 如果
-启用 email confirm，会尝试给该假邮箱发确认信，用户永远登不进来。
+本项目使用真实邮箱注册登录，因此应该保留 Supabase 的邮箱确认能力。用户注册后会
+收到确认邮件，点击邮件中的链接后回到站点并建立登录会话。
 
-1. Supabase Dashboard → **Authentication** → **Providers**
-2. 找到 **Email**
-3. 滚到底下，**Confirm email** 开关 → **关掉**
-4. **Secure email change** 也可以关掉（我们不涉及邮件变更）
-5. Save
+1. Supabase Dashboard → **Authentication** → **URL Configuration**
+2. **Site URL** 填你的线上站点地址，例如
+   `https://stock-analyzer-final-<your-username>.vercel.app`
+3. **Redirect URLs** 至少加入：
+   - `http://localhost:3000/auth/callback`
+   - `https://stock-analyzer-final-<your-username>.vercel.app/auth/callback`
+4. Supabase Dashboard → **Authentication** → **Providers**
+5. 找到 **Email**
+6. **Confirm email** 开关 → **打开**
+7. **Secure email change** 建议保持打开
+8. Save
+
+> 如果后续绑定了自定义域名，也要把
+> `https://your-domain.com/auth/callback` 加入 Redirect URLs。
 
 ### ✅ 阶段 [4] 检查清单
 
 - [ ] Vercel 项目 Settings → Environment Variables 里有一堆 `SUPABASE_*` 和
       `POSTGRES_*` 变量
 - [ ] Supabase Dashboard 能打开对应项目
-- [ ] Supabase Auth → Providers → Email → Confirm email 已关闭
+- [ ] Supabase Auth → URL Configuration 的 Site URL / Redirect URLs 已配置
+- [ ] Supabase Auth → Providers → Email → Confirm email 已开启
 
 ---
 
@@ -450,8 +460,9 @@ https://stock-analyzer-final-<your-username>.vercel.app
 
 打开后应该看到：
 - 首页（动态背景 + 登录注册入口）
-- 点注册 → 邀请码填 `violet-everGarden` + 账号名 + 密码
-- 注册成功 → 自动跳 Dashboard
+- 点注册 → 邀请码填 `violet-everGarden` + 真实邮箱 + 账号名 + 密码
+- 注册成功 → 提示查收确认邮件
+- 点击邮件确认链接 → 回到站点并进入 Dashboard（或回到登录弹窗后用邮箱登录）
 - Dashboard 上所有板块显示数据（此时历史回填已完成）
 
 ### ✅ 阶段 [7] 检查清单
@@ -460,7 +471,7 @@ https://stock-analyzer-final-<your-username>.vercel.app
 - [ ] 手动触发 `stock-daily-close` 能生成 `stock_screen_results`
 - [ ] `market_calendar` 表有 5 市场数据
 - [ ] Vercel 环境变量补齐并 Redeploy
-- [ ] 线上站点可访问，注册登录流程完整
+- [ ] 线上站点可访问，注册、邮箱确认、登录流程完整
 
 ---
 
@@ -485,16 +496,27 @@ https://stock-analyzer-final-<your-username>.vercel.app
 **排查**：
 1. Vercel → Functions → Logs 看具体堆栈
 2. 确认 `SUPABASE_SERVICE_ROLE_KEY` 已填
-3. 确认 Supabase → Auth → Confirm email 已关闭
+3. 确认 `POSTGRES_URL_NON_POOLING` / `SUPABASE_URL` / `SUPABASE_ANON_KEY` 等环境变量已同步
+4. 确认 Drizzle migration 已在目标 Supabase 项目执行
 
-### Q4. DeepSeek 调用 429 太多请求
+### Q4. 注册成功但没收到确认邮件
+
+**排查**：
+1. Supabase → Authentication → Logs 查看是否有邮件发送或 rate limit 错误
+2. 检查垃圾邮件箱
+3. 确认 Supabase → Authentication → URL Configuration 中的 Site URL 和
+   Redirect URLs 包含当前站点域名与 `/auth/callback`
+4. 如果面向真实用户上线，建议在 Supabase 配置自定义 SMTP，避免默认邮件额度或
+   发件人信誉影响送达
+
+### Q5. DeepSeek 调用 429 太多请求
 
 **排查**：DeepSeek API 有并发 / 速率限制（`deepseek-v4-flash` 默认 2500 并发）。
 解决：
 - 确认 Scheduler 的 APScheduler job 不会并发执行（`max_instances=1`）
 - 若仍触发限流，在 job 间加短延迟或错峰 cron
 
-### Q5. Realtime 在前端不触发
+### Q6. Realtime 在前端不触发
 
 **排查**：
 1. 浏览器 DevTools → Network 看 WebSocket 连接是否建立（URL 含 `/realtime`）

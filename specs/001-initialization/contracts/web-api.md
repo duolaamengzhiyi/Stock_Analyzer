@@ -22,7 +22,7 @@ Supabase session（通过 cookie），公开端点明确标注。
   - `400` 参数错误（body 校验失败）
   - `401` 未登录（中间件也会拦截非登录路由，这里是 API 层二次校验）
   - `403` 已登录但无权访问（如越权读他人自选股）
-  - `409` 冲突（如账号名已存在）
+- `409` 冲突（如邮箱或账号名已存在）
   - `429` 被节流（手动刷新 10s 冷却）
   - `5xx` 服务端错误
 
@@ -36,51 +36,72 @@ Supabase session（通过 cookie），公开端点明确标注。
 
 ### `POST /api/auth/register`
 
-用户注册。校验邀请码 + 账号名 + 密码；占位邮箱包装后写入 Supabase Auth +
-业务 `profiles`。
+用户注册。校验邀请码 + 真实邮箱 + 账号名 + 密码；邮箱写入 Supabase Auth，
+账号名写入业务 `profiles`。
 
 ```yaml
 request:
   body:
     inviteCode: string (required, 严格等于 'violet-everGarden' 才通过)
+    email: string (required, valid email, trim + lowercase)
     username: string (required, ^[A-Za-z0-9_-]{3,20}$)
     password: string (required, ≥ 8, 至少字母+数字)
-    rememberMe: boolean (default false, 决定是否签发 long-lived token)
 responses:
   201:
-    body: { userId: string, username: string }
-    sets-cookie: sb-access-token, sb-refresh-token, (optional) llt_token
-  400: INVALID_USERNAME | WEAK_PASSWORD | INVALID_INVITE_CODE
-  409: USERNAME_TAKEN
+    body: { userId: string, email: string, username: string, confirmationRequired: true }
+    note: Confirm email 开启时不设置 session cookie；用户点击邮件确认链接后再登录/建会话
+  400: INVALID_EMAIL | INVALID_USERNAME | WEAK_PASSWORD | INVALID_INVITE_CODE
+  409: EMAIL_TAKEN | USERNAME_TAKEN
 ```
 
 **实现要点**:
 
+- 邮箱以 Zod 校验格式，trim + 转小写后传给 Supabase Auth。
 - 账号名正则以 Zod 校验（FR-008），不依赖前端；trim + 转小写后存储。
 - 用 service_role 查 `invite_codes`（FR-002 严格一致比较）。
-- 调用 `supabase.auth.signUp({ email: `${username}@stock-analyzer.local`,
-  password })`；成功后以 service_role 在 `profiles` 插入映射。
-- `rememberMe=true` 时签发 `long_lived_tokens` 一行，raw token 写入 cookie
-  并返回 SHA-256 hash 落库。
+- 调用 `supabase.auth.signUp({ email, password, options: { emailRedirectTo } })`；
+  `emailRedirectTo` 指向站点的 `/auth/callback`。
+- 成功后以 service_role 在 `profiles` 插入 `{ user_id, username }`；若插入失败
+  需清理刚创建的 Auth user 或返回可重试的服务端错误，避免孤儿账号。
+- 由于 Confirm email 开启，注册请求本身不签发长期凭证；"7 天免登录"只在登录
+  成功时处理。
+
+### `GET /auth/callback`
+
+Supabase 邮箱确认回跳端点。该端点交换 Supabase 回传的 `code`，建立服务端
+session cookie，并按 `next` 参数或默认 `/dashboard` 重定向。
+
+```yaml
+request:
+  query:
+    code: string (required, Supabase email confirmation code)
+    next: string (optional, default /dashboard)
+responses:
+  302: redirect to next or /dashboard
+  400: INVALID_AUTH_CALLBACK
+```
 
 ### `POST /api/auth/login`
 
 ```yaml
 request:
   body:
-    username: string (required)
+    email: string (required, valid email, trim + lowercase)
     password: string (required)
     rememberMe: boolean (default false)
 responses:
   200:
-    body: { userId: string, username: string }
+    body: { userId: string, email: string, username: string }
     sets-cookie: sb-access-token, sb-refresh-token, (optional) llt_token
-  401: INVALID_CREDENTIALS (统一文案"账号或密码错误"，FR-007)
+  401: INVALID_CREDENTIALS (统一文案"邮箱或密码错误"，FR-007)
+  403: EMAIL_NOT_CONFIRMED
 ```
 
 **实现要点**:
 
 - 即便账号不存在，也返回统一错误（防账号枚举，FR-007）。
+- 调用 `signInWithPassword({ email, password })`；若 Supabase 返回邮箱未确认，
+  映射为 `EMAIL_NOT_CONFIRMED` 并提示用户查收确认邮件。
 - 失败事件写入 `audit_logs(kind='login-failure')`。
 - 成功后更新 `profiles.last_login_at`。
 
@@ -378,11 +399,15 @@ responses:
 
 | Code | 含义 | 出现在 |
 |------|------|------|
+| `INVALID_EMAIL` | 邮箱格式不合法 | `/auth/register`, `/auth/login` |
 | `INVALID_USERNAME` | 账号名不符合正则 | `/auth/register` |
 | `WEAK_PASSWORD` | 密码不足 8 位或无字母数字混合 | `/auth/register` |
 | `INVALID_INVITE_CODE` | 邀请码错误 | `/auth/register` |
+| `EMAIL_TAKEN` | 邮箱已注册 | `/auth/register` |
 | `USERNAME_TAKEN` | 账号名已存在 | `/auth/register` |
 | `INVALID_CREDENTIALS` | 登录失败统一文案 | `/auth/login` |
+| `EMAIL_NOT_CONFIRMED` | 邮箱尚未完成确认 | `/auth/login` |
+| `INVALID_AUTH_CALLBACK` | 邮箱确认回跳缺少或无法交换 code | `/auth/callback` |
 | `STOCK_NOT_FOUND` | 添加自选时代码不存在 | `/watchlist` |
 | `ALREADY_IN_WATCHLIST` | 重复添加 | `/watchlist` |
 | `NOT_IN_WATCHLIST` | 删除不存在的自选 | `/watchlist/[code]` |
