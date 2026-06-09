@@ -135,6 +135,24 @@ check_feature_branch() {
         return 0
     fi
 
+    # Opt-out paths (any one suffices):
+    #   1. SPECIFY_SKIP_BRANCH_CHECK=1  显式跳过
+    #   2. SPECIFY_FEATURE / SPECIFY_FEATURE_DIRECTORY 已显式指定 feature
+    #   3. .specify/feature.json 存在并定义了 feature_directory
+    # 这些情况说明用户已经明确告知 spec-kit 当前在做哪个 feature，
+    # 不再需要靠分支名来推断；继续强制 001-xxx 命名只会绑死工作流。
+    if [[ "${SPECIFY_SKIP_BRANCH_CHECK:-}" == "1" || "${SPECIFY_SKIP_BRANCH_CHECK:-}" == "true" ]]; then
+        return 0
+    fi
+    if [[ -n "${SPECIFY_FEATURE:-}" || -n "${SPECIFY_FEATURE_DIRECTORY:-}" ]]; then
+        return 0
+    fi
+    local _spec_root
+    _spec_root=$(get_repo_root)
+    if [[ -f "$_spec_root/.specify/feature.json" ]]; then
+        return 0
+    fi
+
     local branch
     branch=$(spec_kit_effective_branch_name "$raw")
 
