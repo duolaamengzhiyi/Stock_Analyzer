@@ -55,7 +55,7 @@
 
 ## Phase 2: Foundational（阻塞所有 User Story）
 
-**Purpose**: Drizzle schema + RLS + Supabase client + Zustand 根 store + 路由拦截壳 + 共享 UI 原语 + Realtime/Calendar 工具。**所有 11 张表 schema 必须先落，否则 US1 之后没有数据底座**。
+**Purpose**: Drizzle schema + RLS + Supabase client + Zustand 根 store + 路由拦截壳 + 共享 UI 原语 + Realtime/Calendar 工具。**所有 12 张表 schema 必须先落，否则 US1 之后没有数据底座**。
 
 - [ ] T017 [P] 创建 `lib/db/schema/profiles.ts`（data-model.md §1）
 - [ ] T018 [P] 创建 `lib/db/schema/long-lived-tokens.ts`（§2）
@@ -93,7 +93,9 @@
 - [ ] T050 [P] 创建 `sealos/scheduler/main.py` FastAPI 入口 + APScheduler 配置（Asia/Shanghai 时区）
 - [ ] T051 [P] 创建 `sealos/scheduler/clients/supabase.py`（supabase-py service_role 封装）
 - [ ] T052 [P] 创建 `sealos/scheduler/clients/aktools.py`（httpx → Sealos AKTools URL 封装）
-- [ ] T053 [P] 创建 `sealos/scheduler/clients/deepseek.py`（OpenAI SDK 指向 DeepSeek 兼容端点，默认 `deepseek-v4-flash`）
+- [ ] T053 [P] 创建 `sealos/scheduler/clients/deepseek.py`（OpenAI SDK 指向 DeepSeek 兼容端点，默认 `deepseek-v4-pro`，与 plan.md "Constraints"段保持一致）
+- [ ] T053a [P] 创建 `lib/deepseek/client.ts`（Vercel 侧 OpenAI 兼容 SDK 客户端，指向 DeepSeek 端点；同时提供同步与流式 SSE 调用包装；从 `process.env.DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL` 读取配置）
+- [ ] T053b [P] 创建 `lib/deepseek/prompts.ts`（Vercel 侧供个股 AI 介绍 / 个股 AI 分析复用的 prompt 模板：`stock-intro` / `stock-analysis`；与 `sealos` 侧模板字符串保持口径一致，便于 US7 弹窗直读，FR-051）
 - [ ] T054 [P] 创建 `sealos/scheduler/realtime/publish.py`（用 supabase-py 调 `realtime.send` 广播事件）
 - [ ] T055 [P] 创建 `sealos/scheduler/audit.py` 写入 `audit_logs` 工具
 - [ ] T056 [P] 创建 `sealos/scheduler/config.py` 从环境变量读取所有 URL/Key
@@ -110,28 +112,31 @@
 
 ### Tests for User Story 1
 
-- [ ] T057 [P] [US1] 测试：`POST /api/auth/register` 端点契约（错误邀请码、账号名正则、重复账号），用例 `tests/integration/api/auth-register.test.ts`
-- [ ] T058 [P] [US1] 测试：`POST /api/auth/login` 端点契约（统一错误文案 FR-007、7 天免登录 cookie 签发），`tests/integration/api/auth-login.test.ts`
+- [ ] T057 [P] [US1] 测试：`POST /api/auth/register` 端点契约（错误邀请码、邮箱格式非法、账号名正则不合法、重复邮箱、重复账号名、注册并发互斥），并断言成功响应包含 FR-009"请前往邮箱完成确认"提示，用例 `tests/integration/api/auth-register.test.ts`
+- [ ] T058 [P] [US1] 测试：`POST /api/auth/login` 端点契约（邮箱 + 密码登录、统一错误文案 FR-007、邮箱未确认时返回 FR-009 文案、7 天免登录 cookie 签发），`tests/integration/api/auth-login.test.ts`
 - [ ] T059 [P] [US1] 测试：`POST /api/auth/logout` 端点契约（短期 session + long-lived token 同步失效 FR-006），`tests/integration/api/auth-logout.test.ts`
 - [ ] T060 [P] [US1] 测试：`middleware.ts` 拦截 `/dashboard` /watchlist/news 三条路径并重定向，`tests/unit/middleware.test.ts`
 - [ ] T061 [P] [US1] 测试：`stores/slices/authSlice.ts` action 与 selector，`tests/unit/stores/auth-slice.test.ts`
 - [ ] T062 [P] [US1] 测试：`auth-modal` 组件渲染 + MagicCard + 错误行内提示，`tests/unit/components/auth-modal.test.tsx`
+- [ ] T062a [P] [US1] 测试：`GET /auth/callback` 路由（FR-009 邮箱确认回跳）—— 携带合法 `code` → `exchangeCodeForSession` 成功 → 重定向到 `redirect` 参数指定地址（缺省回 `/dashboard`）；缺失或非法 `code` → 重定向回首页并打开登录弹窗，`tests/integration/api/auth-callback.test.ts`
 
 ### Implementation for User Story 1
 
 - [ ] T063 [P] [US1] 创建 `stores/slices/authSlice.ts`（user / sessionState / rememberMe）
-- [ ] T064 [P] [US1] 创建 `lib/supabase/auth.ts` 包装"账号名 → 占位邮箱 `{username}@stock-analyzer.local`"注册/登录（spec.md Assumptions「认证库选型」）
+- [ ] T064 [P] [US1] 创建 `lib/supabase/auth.ts` 包装真实邮箱注册/登录：`signUp({ email, password, options: { emailRedirectTo: <SITE_URL>/auth/callback } })` 与 `signInWithPassword({ email, password })`；email 在入参前必须 trim + 小写规范化；同时暴露 `getSession` / `signOut` / `exchangeCodeForSession` 工具函数（FR-002、FR-009、spec.md Assumptions「认证库选型」）
 - [ ] T065 [P] [US1] 创建 `lib/auth/long-lived-token.ts`（生成 raw token + SHA-256 hash 入 `long_lived_tokens` 表，签发/验证/吊销）
-- [ ] T066 [US1] 实现 `app/api/auth/register/route.ts`（FR-002 邀请码严格相等、FR-003 散列密码、FR-008 账号名正则、并发互斥处理 spec Edge Case「注册并发」）（依赖 T064）
-- [ ] T067 [US1] 实现 `app/api/auth/login/route.ts`（FR-004 7 天免登录、FR-007 统一错误 + 审计日志）（依赖 T064、T065）
+- [ ] T066 [US1] 实现 `app/api/auth/register/route.ts`：FR-002 校验邀请码严格等于 `violet-everGarden` + 校验邮箱格式 + trim 小写规范化、FR-003 由 Supabase Auth 负责密码散列（不在业务层明文留存）、FR-008 账号名正则 `^[A-Za-z0-9_-]{3,20}$` 服务端校验 + 小写规范化、并发互斥处理 spec Edge Case「注册并发」（同邮箱或同账号名极短时间内重复注册的后一次返回唯一性冲突）；调用 `lib/supabase/auth.ts` 的 `signUp` 后将 `account_name` 与 `auth.user.id` 一并写入 `profiles` 表；响应体须返回 FR-009 要求的"请前往邮箱完成确认"提示（依赖 T064）
+- [ ] T067 [US1] 实现 `app/api/auth/login/route.ts`：FR-004 7 天免登录 + FR-007 统一错误"邮箱或密码错误" + 审计日志；当 Supabase 返回 `email_not_confirmed` 错误时改为返回 FR-009 文案"请先完成邮箱确认"且不视为登录成功（依赖 T064、T065）
 - [ ] T068 [US1] 实现 `app/api/auth/logout/route.ts`（FR-006 双凭证失效、清 cookie）（依赖 T065）
 - [ ] T069 [US1] 完成 `middleware.ts` 完整逻辑：拦截 `(app)` 路由组、解析 `redirect` 参数、刷新 Supabase session、读取 `llt_token` 自动续期（FR-005）
 - [ ] T070 [P] [US1] 创建 `hooks/useAuth.ts` 暴露 `register/login/logout/session`
 - [ ] T071 [US1] 实现 `app/(public)/layout.tsx` 与 `app/(public)/page.tsx` 首页基础版（含"登录/注册"按钮触发弹窗）
 - [ ] T072 [US1] 实现 `app/(auth)/_modals/auth-modal.tsx`（MagicCard 半透明弹窗、Tab 切换注册/登录、FR-001）（依赖 T070）
 - [ ] T073 [US1] 实现 `app/(app)/layout.tsx` 登录后路由组壳 + 401 时回弹首页（FR-005 配合 T069）
+- [ ] T073a [US1] 实现 `app/auth/callback/route.ts`（FR-009 邮箱确认回跳）：`GET` 处理 Supabase 回跳的 `code` 与 `redirect` 查询参数，调用 T064 暴露的 `exchangeCodeForSession(code)` 建立服务端 session（用 `@supabase/ssr` 写 cookie），成功则 302 到 `redirect` 指定路径（缺省 `/dashboard`），失败则 302 回 `/?login=1` 并附带统一错误提示；同时落审计日志（依赖 T064）
+- [ ] T073b [US1] 在 sm（≤640 px）与 lg（≥1024 px）两个断点下手动验证首页 + 登录弹窗 + (app) layout 的渲染、滚动与触达性（FR-110），将截图与差异点附加到 quickstart.md 验收章节
 
-**Checkpoint**: US1 独立可运行——访客可注册/登录/登出，7 天免登录持久化，受保护路由被正确拦截。
+**Checkpoint**: US1 独立可运行——访客可注册/登录/登出，邮箱确认链接点击后建立 session 跳转 Dashboard，7 天免登录持久化，受保护路由被正确拦截。
 
 ---
 
@@ -173,26 +178,25 @@
 
 ### Tests for User Story 3
 
-- [ ] T088 [P] [US3] 测试：`lib/screens/launching-soon.ts` 算法（震荡振幅、回归斜率、量比、均线），`tests/unit/screens/launching-soon.test.ts`，含 spec.md Assumptions 量化定义全部 fixture
-- [ ] T089 [P] [US3] 测试：`lib/screens/main-uptrend.ts`（5/10 日均线、5 周均线、连续上涨容差），`tests/unit/screens/main-uptrend.test.ts`
-- [ ] T090 [P] [US3] 测试：`sealos/scheduler/screens/launching_soon.py` 与 TS 版同语义（同一 fixture 跑两遍结果一致），`sealos/scheduler/tests/test_screens_parity.py`
-- [ ] T091 [P] [US3] 测试：`GET /api/screens/launching-soon` 与 `main-uptrend` 端点契约（503 无数据态、≤20 条、降序），`tests/integration/api/screens.test.ts`
+- [ ] T090 [P] [US3] 测试：`sealos/scheduler/screens/launching_soon.py` 与 `main_uptrend.py` 对 spec.md Assumptions「区间震荡」「连续上涨」量化定义全部 fixture 的回归测试（振幅、回归斜率、量比基线不含当日；5 日窗口收益、回撤容差），`sealos/scheduler/tests/test_screens.py`
+- [ ] T091 [P] [US3] 测试：`GET /api/screens/launching-soon` 与 `main-uptrend` 端点契约（503 无数据态、≤20 条、按 `change_percent DESC` 排序，FR-042），`tests/integration/api/screens.test.ts`
 - [ ] T092 [P] [US3] 测试：`launching-soon-list` 与 `main-uptrend-list` 组件单击首帧反馈（原则五），`tests/unit/components/screen-list.test.tsx`
 
 ### Implementation for User Story 3
 
-- [ ] T093 [P] [US3] 实现 `lib/screens/launching-soon.ts`（FR-040 + Assumptions：振幅、回归斜率、量比基线不含当日）
-- [ ] T094 [P] [US3] 实现 `lib/screens/main-uptrend.ts`（FR-041 + Assumptions：5 日窗口收益、回撤容差）
-- [ ] T095 [P] [US3] 实现 `sealos/scheduler/screens/launching_soon.py`（与 T093 同语义）
-- [ ] T096 [P] [US3] 实现 `sealos/scheduler/screens/main_uptrend.py`（与 T094 同语义）
-- [ ] T097 [US3] 在 `sealos/scheduler/jobs/stock_daily.py` 的 close 任务尾部嵌入预计算并写 `stock_screen_results`（每 (date,kind) 删旧插新事务）（依赖 T079、T095、T096）
-- [ ] T098 [P] [US3] 实现 `app/api/screens/launching-soon/route.ts`（直接读 `stock_screen_results`，503 占位态）
-- [ ] T099 [P] [US3] 实现 `app/api/screens/main-uptrend/route.ts`
+> 设计决策：筛选算法**仅在 Sealos Python 侧实现一次**。Vercel 永远只读 `stock_screen_results` 表（T097 写、T098/T099 读），不在线计算；TS 版（曾计划 `lib/screens/`）已废弃以避免双实现漂移。算法权威阈值参见 spec.md `Assumptions`。
+
+- [ ] T095 [P] [US3] 实现 `sealos/scheduler/screens/launching_soon.py`（FR-040 + Assumptions：振幅、回归斜率、量比基线不含当日）
+- [ ] T096 [P] [US3] 实现 `sealos/scheduler/screens/main_uptrend.py`（FR-041 + Assumptions：5 日窗口收益、回撤容差）
+- [ ] T097 [US3] 在 `sealos/scheduler/jobs/stock_daily.py` 的 close 任务尾部嵌入预计算并写 `stock_screen_results`（每 (date,kind) 删旧插新事务；写入前对结果按 `change_percent DESC` 排序，FR-042）（依赖 T079、T095、T096）
+- [ ] T098 [P] [US3] 实现 `app/api/screens/launching-soon/route.ts`（直接读 `stock_screen_results`，按 `change_percent DESC` 排序，limit 20；503 占位态，FR-042）
+- [ ] T099 [P] [US3] 实现 `app/api/screens/main-uptrend/route.ts`（同上口径，FR-042）
 - [ ] T100 [P] [US3] 实现 `hooks/useStockScreens.ts`（结合 cacheSlice 缓存当日结果）
 - [ ] T101 [P] [US3] 实现 `app/(app)/dashboard/_components/launching-soon-list.tsx`（股票名 + ChangePercent，骨架屏，FR-043）
 - [ ] T102 [P] [US3] 实现 `app/(app)/dashboard/_components/main-uptrend-list.tsx`
 - [ ] T103 [US3] 实现 `app/(app)/dashboard/page.tsx` 第一版（仅含 launching-soon + main-uptrend 两块，单列布局；后续 phase 替换为 Bento Grid）
 - [ ] T104 [US3] 实现 `app/(app)/dashboard/loading.tsx` 骨架屏
+- [ ] T104a [US3] 在 sm 与 lg 两个断点下手动验证 `launching-soon-list` / `main-uptrend-list` / Dashboard 第一版的渲染、滚动与触达性（FR-110）
 
 **Checkpoint**: US3 独立可运行——已抓取数据后访问 `/dashboard` 看到两份名单，点击有首帧反馈（菜单待 US7 接入）。
 
@@ -207,10 +211,10 @@
 ### Tests for User Story 4
 
 - [ ] T105 [P] [US4] 测试：`stores/slices/watchlistSlice.ts` action 与乐观 UI 回滚，`tests/unit/stores/watchlist-slice.test.ts`
-- [ ] T106 [P] [US4] 测试：`GET / POST /api/watchlist` + `DELETE [code]` + `PATCH /reorder` 契约（RLS 自隔离、合并重复 FR-010），`tests/integration/api/watchlist.test.ts`
+- [ ] T106 [P] [US4] 测试：`GET / POST /api/watchlist` + `DELETE [code]` + `PATCH /reorder` 契约（RLS 自隔离、合并重复 FR-010）；并显式断言 FR-013 跨设备一致性——以同一用户 token 在两个独立的 supabase client 实例下分别 `GET /api/watchlist`，结果数组在 `code` 与 `sortOrder` 上完全相等，`tests/integration/api/watchlist.test.ts`
 - [ ] T107 [P] [US4] 测试：`GET /api/search/stocks` 代码精确/前缀 + 名称包含 + 上限 10（FR-010），`tests/integration/api/search.test.ts`
 - [ ] T108 [P] [US4] 测试：`watchlist-sortable` 拖拽乐观 UI + 回滚（FR-011），`tests/unit/components/watchlist-sortable.test.tsx`
-- [ ] T109 [P] [US4] 测试：`watchlist-widget` 虚拟滚动 DOM 节点 ≤ 60（FR-062 / US4 AS6），`tests/unit/components/watchlist-widget.test.tsx`
+- [ ] T109 [P] [US4] 测试：`watchlist-widget` 虚拟滚动 DOM 节点 ≤ 60（FR-062 / US4 AS6）+ widget 渲染顺序与 `GET /api/watchlist` 返回顺序逐项一致（FR-060 / US4 AS4），`tests/unit/components/watchlist-widget.test.tsx`
 
 ### Implementation for User Story 4
 
@@ -223,8 +227,9 @@
 - [ ] T116 [US4] 实现 `app/(app)/watchlist/page.tsx` 搜索 + 列表 + 拖拽 + 删除（依赖 T110、T115）
 - [ ] T117 [US4] 实现 `app/(app)/watchlist/_components/stock-search.tsx` + `watchlist-sortable.tsx`（@dnd-kit + react-virtual，列表 > 30 走虚拟滚动 FR-062）
 - [ ] T118 [US4] 实现 `app/(app)/watchlist/_components/too-many-warning.tsx`（≥ 200 软提示，FR-014）
-- [ ] T119 [US4] 实现 `app/(app)/dashboard/_components/watchlist-widget.tsx`（虚拟滚动 + 当日 + 5 日累计 + 涨红跌绿）
+- [ ] T119 [US4] 实现 `app/(app)/dashboard/_components/watchlist-widget.tsx`（虚拟滚动 + 当日涨跌幅 + 5 日累计涨跌幅 + 涨红跌绿；渲染顺序严格沿用 `GET /api/watchlist` 返回的 `orderIndex` 序列，FR-060）
 - [ ] T120 [US4] 把 watchlist-widget 接入 `dashboard/page.tsx`（与 US3 列表并列）
+- [ ] T120a [US4] 在 sm 与 lg 两个断点下手动验证自选股管理页（搜索 / 拖拽 / 删除 / 软提示）与 Dashboard 自选股 widget 的渲染、滚动与触达性（FR-110）
 
 **Checkpoint**: US4 独立可运行——自选 CRUD 全闭环，Dashboard 板块同步，跨路由无空白闪烁。
 
@@ -275,7 +280,7 @@
 - [ ] T136 [US6] news_summary 后广播 `news-summary-done`
 - [ ] T137 [US6] 注册 4 个 cron：随 stock_daily 同发 + 21:00 + 06:00（FR-030）
 - [ ] T138 [P] [US6] 实现 `app/api/news/route.ts`（24h 默认 + `?range=7d`）
-- [ ] T139 [P] [US6] 实现 `app/(app)/news/page.tsx` + `_components/news-ai-summary.tsx` + `_components/news-list.tsx`
+- [ ] T139 [P] [US6] 实现 `app/(app)/news/page.tsx` + `_components/news-ai-summary.tsx` + `_components/news-list.tsx`；`news-ai-summary` 卡片页脚必须同时展示 `generated_at`（AI 更新时间）与 `source_data_at`（参考数据时间）双时间戳（FR-054），并按新鲜度阈值用文字 + 视觉双编码呈现过期标识（FR-055，避免单一颜色依赖）
 
 **Checkpoint**: US6 独立可运行——`/news` 实时刷新且 7 日滚动正确。
 
@@ -290,7 +295,7 @@
 ### Tests for User Story 7
 
 - [ ] T140 [P] [US7] 测试：`GET /api/ai/stock-intro/[code]` SSE + 当日缓存命中（FR-092），`tests/integration/api/ai-stock-intro.test.ts`
-- [ ] T141 [P] [US7] 测试：`stock-action-menu` 单击 100ms 内可见 + Esc 关闭（FR-090 / FR-093 / 原则五），`tests/unit/components/stock-action-menu.test.tsx`
+- [ ] T141 [P] [US7] 测试：`stock-action-menu` 单击 100ms 内可见 + 浮层内同时可见"AI 个股介绍"与"AI 股票分析"两个选项（FR-091）+ Esc 关闭 + 浮层外点击关闭（FR-090 / FR-091 / FR-093 / 原则五），`tests/unit/components/stock-action-menu.test.tsx`
 - [ ] T142 [P] [US7] 测试：`stock-ai-dialog` SSE chunk 渐进渲染 + 结构化三段（走势/量价/风险），`tests/unit/components/stock-ai-dialog.test.tsx`
 
 ### Implementation for User Story 7
@@ -328,6 +333,7 @@
 - [ ] T157 [P] [US12] 实现 `app/(app)/dashboard/_components/holiday-banner.tsx`（FR-121 文案 + 关闭按钮）
 - [ ] T158 [US12] 在 US3 / US4 / US5 各板块 hook 内引入 `last-trading-day` 回退逻辑（FR-122：休市日数据指向最近 A 股交易日，不展示空数据）
 - [ ] T159 [US12] sealos `stock_daily.py` 与 `ai_generate.py` 在 A 股休市日跳过抓取/午评晚评（FR-124 / spec.md Edge Case「A 股休市当日 AI」）
+- [ ] T159a [US12] 在 sm 与 lg 两个断点下手动验证 `holiday-banner` 与 `market-status-card` 的渲染、文字 + 视觉双编码、关闭按钮触达性（FR-110）
 
 **Checkpoint**: US12 独立可运行——休市日横幅、卡片、各板块回退口径全对齐。
 
@@ -346,10 +352,10 @@
 
 ### Implementation for User Story 8
 
-- [ ] T162 [US8] 实现 `sealos/scheduler/jobs/sector_picks.py`（AkShare `stock_board_concept_*`，写 `sector_picks` + ≤5 行；空时仍写 ai_artifacts 标记空批次）
+- [ ] T162 [US8] 实现 `sealos/scheduler/jobs/sector_picks.py`：**必须读取当批次最新 forecast `ai_artifacts` 中模型已识别的概念板块清单作为输入**（FR-070 "与 forecast 共享同一份 AI 判断"），**禁止**在本 job 内再次独立调用 LLM 进行板块识别；随后用 AkShare `stock_board_concept_cons_em` 拉取每个命中板块的成分股，按 FR-072 规则挑龙头，写 `sector_picks` + ≤5 行；空时仍写 ai_artifacts 标记空批次（依赖 T125 forecast 产出）
 - [ ] T163 [US8] sector_picks 后广播 `sector-picks-done`
 - [ ] T164 [P] [US8] 实现 `app/api/dashboard/sector-picks/route.ts`
-- [ ] T165 [P] [US8] 实现 `app/(app)/dashboard/_components/sector-picks-card.tsx`（含空态、龙头点击复用 US7 菜单）
+- [ ] T165 [P] [US8] 实现 `app/(app)/dashboard/_components/sector-picks-card.tsx`（含空态、龙头点击复用 US7 菜单）；卡片页脚必须同时展示 `generated_at` 与 `source_data_at` 双时间戳（FR-054），并按新鲜度阈值用文字 + 视觉双编码呈现过期标识（FR-055，避免单一颜色依赖）
 - [ ] T166 [US8] 接入 `dashboard/page.tsx`
 
 **Checkpoint**: US8 独立可运行——预测推荐当日 21:00 后正常展示，空态正确。
@@ -371,7 +377,7 @@
 - [ ] T168 [P] [US9] 实现 `app/(public)/_components/dynamic-bg-particles.tsx`（科技粒子）
 - [ ] T169 [P] [US9] 实现 `app/(public)/_components/dynamic-bg-gradient.tsx`（渐变流光）
 - [ ] T170 [P] [US9] 实现 `app/(public)/_components/dynamic-bg-candle.tsx`（K 线抽象）
-- [ ] T171 [US9] 实现 `app/(public)/_components/active-bg.ts` 常量开关 + `next/dynamic` 客户端动态加载
+- [ ] T171 [US9] 实现 `app/(public)/_components/active-bg.ts` 常量开关 + `next/dynamic` 客户端动态加载；采用**注册表式接口**（如 `BACKGROUNDS = { particles, gradient, candle }`），新增第 4+ 组背景只需新建模块文件并加入注册表，**不需要**改动调用侧或业务代码（FR-100 "≥ 3 组" 留可扩展）
 - [ ] T172 [US9] 在 `app/(public)/page.tsx` 挂载 active 背景，主文案对比度可读
 
 **Checkpoint**: US9 独立可运行——背景切换由代码常量驱动，移动端无溢出。
@@ -417,6 +423,7 @@
 
 - [ ] T183 [US11] 实现 `components/shared/side-nav.tsx`（桌面 hover + 移动端抽屉，主入口 Dashboard / 自选股 / 新闻）
 - [ ] T184 [US11] 把 SideNav 挂到 `app/(app)/layout.tsx`，`uiSlice` 持久化展开状态
+- [ ] T184a [US11] 在 sm 与 lg 两个断点下手动验证侧栏：sm 移动抽屉滑入 / lg hover 展开收起 / 路由跳转后 watchlist 与 cache 不被清（FR-110 + FR-105）
 
 **Checkpoint**: US11 独立可运行——桌面/移动端导航行为正确，跨路由不清缓存。
 
@@ -427,7 +434,7 @@
 **Purpose**: 把 Realtime 推送、手动刷新节流、断连重连、Lint 强制 FR-108、quickstart 全链路联调收尾。
 
 - [ ] T185 [P] 测试：`hooks/useRealtimeChannel.ts` 各事件 → 板块 invalidate（contracts/realtime-events.md "客户端订阅与局部刷新映射"），`tests/integration/realtime-channel.test.ts`
-- [ ] T186 [P] 测试：FR-10A 断连指数退避 + 5 分钟降级提示，`tests/unit/hooks/realtime-reconnect.test.ts`
+- [ ] T186 [P] 测试：FR-111 断连指数退避 + 5 分钟降级提示，`tests/unit/hooks/realtime-reconnect.test.ts`
 - [ ] T187 [P] 测试：`POST /api/dashboard/refresh` 10 秒节流 + 冷却态（FR-109），`tests/integration/api/refresh-throttle.test.ts`
 - [ ] T188 [P] 测试：ESLint 自定义规则禁轮询命中（FR-108 静态扫描），`tests/lint/no-polling-rule.test.ts`
 - [ ] T189 完成 `stores/slices/realtimeSlice.ts` reducer（订阅状态 / 已收事件 / 重连计数）
@@ -437,7 +444,7 @@
 - [ ] T193 把 `useRealtimeChannel` 挂到 `app/(app)/layout.tsx`，监听全部事件并按 contracts 映射板块刷新（依赖 T044、T100、T115、T128、T154）
 - [ ] T194 [P] 在根 `app/layout.tsx` 接入 `next-nprogress-bar`（路由切换顶部进度条，原则五）
 - [ ] T195 [P] 跑 `pnpm lint` + `pnpm test` 全绿
-- [ ] T196 按 quickstart.md [7] 全链路验证：注册 → 登录 → Dashboard → 自选 → 新闻 → AI 弹窗；记录 SC-003 / SC-004 / SC-006 实测值
+- [ ] T196 按 quickstart.md [7] 全链路验证：注册 → 登录 → Dashboard → 自选 → 新闻 → AI 弹窗；记录以下 SC 的实测值并写入 quickstart.md 验收章节：SC-003 / SC-004 / SC-006（前端打点 + Performance API：FCP / LCP / 路由切换 ms）；SC-002（注册接口请求 → "确认邮件已发送"反馈渲染的端到端 ms；以及邮箱确认链接点击 → Dashboard 首屏可见的端到端 ms，前端打点）；SC-010（Sealos `audit_logs` 中 `stock_daily_*` job 触发到完成的耗时 P95，按交易日抽样统计）；SC-013（30 日滚动窗口内 `audit_logs` 中 midday / evening / forecast 三类 AI 任务的成功率统计 SQL，期望 ≥ 95%）
 - [ ] T197 [P] 性能与无障碍抽查：sm 与 lg 双断点（SC-040）+ 色盲模拟检查 AI 过期标识（FR-055 + spec Edge Case "色盲与夜间模式"）
 - [ ] T198 [P] 抽查 SC-020 / SC-021 / SC-022（筛选硬约束 + 自选涨跌口径偏差 ≤ 0.01%）
 - [ ] T199 [P] 抽查 SC-050 / SC-051（A 股休市横幅 100% 命中、五市场判定与权威公告一致）
@@ -570,4 +577,4 @@ Task: "T062 auth-modal 组件单测"
 - 测试先写并 FAIL，再写实现（原则二硬约束）
 - 每个 checkpoint 可独立交付/演示，不破坏既有故事
 - **避免**：跨 User Story 的隐式耦合（US7 必须依赖明确传入的列表 props，不直接依赖 US3 的实现细节）
-- 总任务数：**199**（Setup 16 + Foundational 40 + US1 17 + US2 14 + US3 17 + US4 16 + US5 10 + US6 9 + US7 9 + US12 11 + US8 7 + US9 6 + US10 9 + US11 3 + Polish 15）
+- 总任务数：**204**（Setup 16 + Foundational 42 + US1 20 + US2 14 + US3 14 + US4 17 + US5 10 + US6 9 + US7 9 + US12 12 + US8 7 + US9 6 + US10 9 + US11 4 + Polish 15）。US3 较初版减少 4 条（删除 TS 版筛选 T088/T089/T093/T094，并把 T090 从 parity 测试改为单侧 fixture 回归测试），原因见 Phase 5 设计决策段。
