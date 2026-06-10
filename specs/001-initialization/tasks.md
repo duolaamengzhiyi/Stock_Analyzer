@@ -94,7 +94,7 @@
 - [ ] T051 [P] 创建 `sealos/scheduler/clients/supabase.py`（supabase-py service_role 封装）
 - [ ] T052 [P] 创建 `sealos/scheduler/clients/aktools.py`（httpx → Sealos AKTools URL 封装）
 - [ ] T053 [P] 创建 `sealos/scheduler/clients/deepseek.py`（OpenAI SDK 指向 DeepSeek 兼容端点，默认 `deepseek-v4-pro`，与 plan.md "Constraints"段保持一致）
-- [ ] T053a [P] 创建 `lib/deepseek/client.ts`（Vercel 侧 OpenAI 兼容 SDK 客户端，指向 DeepSeek 端点；同时提供同步与流式 SSE 调用包装；从 `process.env.DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL` 读取配置）
+- [ ] T053a [P] 创建 `lib/deepseek/client.ts`（Vercel 侧 OpenAI 兼容 SDK 客户端，指向 DeepSeek 端点；默认模型 `deepseek-v4-pro`，与 T053 / plan.md "Constraints" 段保持一致；同时提供同步与流式 SSE 调用包装；从 `process.env.DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL` 读取配置）
 - [ ] T053b [P] 创建 `lib/deepseek/prompts.ts`（Vercel 侧供个股 AI 介绍 / 个股 AI 分析复用的 prompt 模板：`stock-intro` / `stock-analysis`；与 `sealos` 侧模板字符串保持口径一致，便于 US7 弹窗直读，FR-051）
 - [ ] T054 [P] 创建 `sealos/scheduler/realtime/publish.py`（用 supabase-py 调 `realtime.send` 广播事件）
 - [ ] T055 [P] 创建 `sealos/scheduler/audit.py` 写入 `audit_logs` 工具
@@ -213,7 +213,7 @@
 - [ ] T105 [P] [US4] 测试：`stores/slices/watchlistSlice.ts` action 与乐观 UI 回滚，`tests/unit/stores/watchlist-slice.test.ts`
 - [ ] T106 [P] [US4] 测试：`GET / POST /api/watchlist` + `DELETE [code]` + `PATCH /reorder` 契约（RLS 自隔离、合并重复 FR-010）；并显式断言 FR-013 跨设备一致性——以同一用户 token 在两个独立的 supabase client 实例下分别 `GET /api/watchlist`，结果数组在 `code` 与 `sortOrder` 上完全相等，`tests/integration/api/watchlist.test.ts`
 - [ ] T107 [P] [US4] 测试：`GET /api/search/stocks` 代码精确/前缀 + 名称包含 + 上限 10（FR-010），`tests/integration/api/search.test.ts`
-- [ ] T108 [P] [US4] 测试：`watchlist-sortable` 拖拽乐观 UI + 回滚（FR-011），`tests/unit/components/watchlist-sortable.test.tsx`
+- [ ] T108 [P] [US4] 测试：`watchlist-sortable` 拖拽乐观 UI + 回滚（FR-011）+ 渲染 100 条数据时 DOM 节点 ≤ 60（FR-062 管理页虚拟滚动，> 30 条触发），`tests/unit/components/watchlist-sortable.test.tsx`
 - [ ] T109 [P] [US4] 测试：`watchlist-widget` 虚拟滚动 DOM 节点 ≤ 60（FR-062 / US4 AS6）+ widget 渲染顺序与 `GET /api/watchlist` 返回顺序逐项一致（FR-060 / US4 AS4），`tests/unit/components/watchlist-widget.test.tsx`
 
 ### Implementation for User Story 4
