@@ -32,22 +32,22 @@
 
 **Purpose**: Next.js + Sealos 双骨架初始化、依赖安装、工具链配置。Vercel 项目、Supabase Integration、`.env.local` 已在 quickstart [3]–[5.1] 完成（外部前置条件，不在任务范围内）。
 
-- [ ] T001 在仓库根目录用 `pnpm create next-app@latest .` 初始化 Next.js 15（App Router、TS strict、Tailwind 3.4），保留现有 `specs/`、`.specify/`、`.gitignore` 等不被覆盖
-- [ ] T002 [P] 安装核心运行时依赖：`pnpm add next@15 react@19 react-dom@19 zustand drizzle-orm postgres @supabase/supabase-js @supabase/ssr next-nprogress-bar @dnd-kit/core @dnd-kit/sortable @tanstack/react-virtual lucide-react zod`
-- [ ] T003 [P] 安装开发依赖：`pnpm add -D drizzle-kit vitest @vitejs/plugin-react @testing-library/react @testing-library/jest-dom jsdom msw eslint @typescript-eslint/eslint-plugin prettier`
-- [ ] T004 [P] 配置 `tsconfig.json` 启用 strict 模式，paths 别名 `@/*` → 项目根
-- [ ] T005 [P] 初始化 shadcn/ui：`pnpm dlx shadcn@latest init`，组件目录 `components/ui/`
-- [ ] T006 [P] 创建 `tailwind.config.ts` 与 `app/globals.css`，注入 shadcn 主题变量与 `涨红跌绿` 语义色 token（FR-043 / FR-104）
-- [ ] T007 [P] 创建 ESLint 配置 `eslint.config.mjs`，含自定义规则禁止 `setInterval` / `refreshInterval` / `useSWR.refreshInterval`（FR-108 静态约束，落实到 lint）
-- [ ] T008 [P] 创建 `.prettierrc` 与 `.editorconfig`，统一格式
-- [ ] T009 创建 `drizzle.config.ts`（指向 `POSTGRES_URL_NON_POOLING`，schema 路径 `lib/db/schema/*.ts`，out `lib/db/migrations`）
-- [ ] T010 [P] 创建 `vitest.config.ts` + `tests/setup.ts` 接入 jsdom + MSW，`pnpm test` 脚本入口
-- [ ] T011 [P] 创建 `.env.example` 列出 SUPABASE/POSTGRES/DEEPSEEK/AKTOOLS 全部变量名（仅占位、不含值）
-- [ ] T012 创建 `package.json` scripts：`dev`、`build`、`start`、`lint`、`test`、`db:generate`、`db:migrate`、`db:push`、`db:studio`
-- [ ] T013 [P] 在仓库根创建 `sealos/scheduler/` 目录，写 `pyproject.toml`（FastAPI、httpx、supabase-py、apscheduler、openai、pandas、numpy）+ `requirements.txt` 同步
-- [ ] T014 [P] 创建 `sealos/scheduler/Dockerfile`（python:3.12-slim, 安装 deps, `CMD ["uvicorn", "main:app"]`）
-- [ ] T015 [P] 创建 `sealos/scheduler/sealos-deploy.yml` Sealos App Launchpad 配置骨架（参考 quickstart [6.3]）
-- [ ] T016 [P] 创建 `sealos/scheduler/pytest.ini` + `tests/conftest.py`，接入 respx mock httpx
+- [X] T001 在仓库根目录用 `pnpm create next-app@latest .` 初始化 Next.js 15（App Router、TS strict、Tailwind 3.4），保留现有 `specs/`、`.specify/`、`.gitignore` 等不被覆盖
+- [X] T002 [P] 安装核心运行时依赖：`pnpm add next@15 react@19 react-dom@19 zustand drizzle-orm postgres @supabase/supabase-js @supabase/ssr next-nprogress-bar @dnd-kit/core @dnd-kit/sortable @tanstack/react-virtual lucide-react zod`
+- [X] T003 [P] 安装开发依赖：`pnpm add -D drizzle-kit vitest @vitejs/plugin-react @testing-library/react @testing-library/jest-dom jsdom msw eslint @typescript-eslint/eslint-plugin prettier`
+- [X] T004 [P] 配置 `tsconfig.json` 启用 strict 模式，paths 别名 `@/*` → 项目根
+- [X] T005 [P] 初始化 shadcn/ui：`pnpm dlx shadcn@latest init`，组件目录 `components/ui/`
+- [X] T006 [P] 创建 `tailwind.config.ts` 与 `app/globals.css`，注入 shadcn 主题变量与 `涨红跌绿` 语义色 token（FR-043 / FR-104）
+- [X] T007 [P] 创建 ESLint 配置 `eslint.config.mjs`，含自定义规则禁止 `setInterval` / `refreshInterval` / `useSWR.refreshInterval`（FR-108 静态约束，落实到 lint）
+- [X] T008 [P] 创建 `.prettierrc` 与 `.editorconfig`，统一格式
+- [X] T009 创建 `drizzle.config.ts`（指向 `POSTGRES_URL_NON_POOLING`，schema 路径 `lib/db/schema/*.ts`，out `lib/db/migrations`）
+- [X] T010 [P] 创建 `vitest.config.ts` + `tests/setup.ts` 接入 jsdom + MSW，`pnpm test` 脚本入口
+- [X] T011 [P] 创建 `.env.example` 列出 SUPABASE/POSTGRES/DEEPSEEK/AKTOOLS 全部变量名（仅占位、不含值）
+- [X] T012 创建 `package.json` scripts：`dev`、`build`、`start`、`lint`、`test`、`db:generate`、`db:migrate`、`db:push`、`db:studio`
+- [X] T013 [P] 在仓库根创建 `sealos/scheduler/` 目录，写 `pyproject.toml`（FastAPI、httpx、supabase-py、apscheduler、openai、pandas、numpy）+ `requirements.txt` 同步
+- [X] T014 [P] 创建 `sealos/scheduler/Dockerfile`（python:3.12-slim, 安装 deps, `CMD ["uvicorn", "main:app"]`）
+- [X] T015 [P] 创建 `sealos/scheduler/sealos-deploy.yml` Sealos App Launchpad 配置骨架（参考 quickstart [6.3]）
+- [X] T016 [P] 创建 `sealos/scheduler/pytest.ini` + `tests/conftest.py`，接入 respx mock httpx
 
 **Checkpoint**: 双骨架成型，`pnpm dev` 能起空白 Next，`docker build sealos/scheduler/` 能构建。
 

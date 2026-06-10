@@ -1,0 +1,64 @@
+# Sealos App Launchpad 部署骨架（参考 quickstart [6.3]）
+# 在 Sealos 上以「自定义镜像」+「容器内运行」方式部署本服务。
+# 镜像要先用 `docker build -t <registry>/<user>/stock-scheduler:<tag>` 推送到镜像仓库。
+apiVersion: app.sealos.io/v1
+kind: AppLaunchpad
+metadata:
+  name: stock-scheduler
+  namespace: ns-${SEALOS_USER_NS}
+spec:
+  image: ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+  replicas: 1
+  ports:
+    - port: 8000
+      protocol: TCP
+      exposes: false # Scheduler 不对外暴露 HTTP，仅供内部健康检查；如需 webhook 再开
+  resources:
+    cpu: 500m
+    memory: 1Gi
+  env:
+    - name: TZ
+      value: Asia/Shanghai
+    - name: SUPABASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: stock-scheduler-secrets
+          key: SUPABASE_URL
+    - name: SUPABASE_SERVICE_ROLE_KEY
+      valueFrom:
+        secretKeyRef:
+          name: stock-scheduler-secrets
+          key: SUPABASE_SERVICE_ROLE_KEY
+    - name: DEEPSEEK_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: stock-scheduler-secrets
+          key: DEEPSEEK_API_KEY
+    - name: DEEPSEEK_BASE_URL
+      value: https://api.deepseek.com/v1
+    - name: DEEPSEEK_MODEL_MIDDAY
+      value: deepseek-v4-pro
+    - name: DEEPSEEK_MODEL_EVENING
+      value: deepseek-v4-pro
+    - name: DEEPSEEK_MODEL_FORECAST
+      value: deepseek-v4-pro
+    - name: DEEPSEEK_MODEL_NEWS_SUMMARY
+      value: deepseek-v4-flash
+    - name: AKTOOLS_BASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: stock-scheduler-secrets
+          key: AKTOOLS_BASE_URL
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: 8000
+    initialDelaySeconds: 15
+    periodSeconds: 30
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: 8000
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  restartPolicy: Always
