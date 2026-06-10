@@ -10,7 +10,7 @@ generate` 从 `lib/db/schema/*.ts` 派生；Sealos Python Scheduler **只读写
 
 ---
 
-## 表总览（11 张业务表 + Supabase 自带 auth schema）
+## 表总览（12 张业务表 + Supabase 自带 auth schema）
 
 | 表名 | 用途 | 保留策略 | 写入方 |
 |------|------|--------|------|

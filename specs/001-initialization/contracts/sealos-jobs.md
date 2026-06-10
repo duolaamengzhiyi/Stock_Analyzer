@@ -235,6 +235,8 @@ steps:
   3. UPSERT market_calendar
   4. 删除 date < now() - 180d 的历史记录
   5. audit_logs: calendar-refresh success
+  6. Realtime broadcast: event='calendar-refresh-done'，affectedBoards=['market-status']
+     （FR-106 (g)；保证 Dashboard 市场状态卡片在日历窗口补齐后即时刷新）
 ```
 
 ---

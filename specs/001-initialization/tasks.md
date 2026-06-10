@@ -158,10 +158,10 @@
 
 - [ ] T079 [US2] 实现 `sealos/scheduler/jobs/stock_daily.py`（`stock_daily_midday` + `stock_daily_close`，调 AKTools `stock_zh_a_spot_em`，写 `stock_daily` 与 `stocks`）
 - [ ] T080 [US2] 实现 `sealos/scheduler/jobs/initial_backfill.py`（AKShare `stock_zh_a_hist` 拉最近 60 交易日，写一次性标志位）
-- [ ] T081 [US2] 实现 `sealos/scheduler/jobs/calendar_refresh.py`（AkShare `tool_trade_date_hist_sina` + pandas-market-calendars，5 市场写入 `market_calendar`）
+- [ ] T081 [US2] 实现 `sealos/scheduler/jobs/calendar_refresh.py`（AkShare `tool_trade_date_hist_sina` + pandas-market-calendars，5 市场写入 `market_calendar`）；UPSERT 完成后调 `realtime/publish.py` 广播 `calendar-refresh-done`（FR-106 (g)；affectedBoards=['market-status']；contracts/sealos-jobs.md `calendar_refresh` 第 6 步）
 - [ ] T082 [US2] 实现 `sealos/scheduler/jobs/cleanup.py`（`stock_daily` 60 交易日、`news_items` 7 天；保留 `ai_artifacts` 不动，FR-052）
 - [ ] T083 [US2] 在 `sealos/scheduler/main.py` 注册以上 4 个 job：cron `30 11 * * 1-5` / `15 15 * * 1-5` + 启动时一次 backfill+calendar
-- [ ] T084 [US2] 实现 stock_daily_close 完成后调 `realtime/publish.py` 广播 `stock-daily-close`（contracts/realtime-events.md `stock-daily-close`）
+- [ ] T084 [US2] 实现 stock_daily_midday 完成后调 `realtime/publish.py` 广播 `stock-daily-midday`（FR-106 (a)；affectedBoards=['indices','launching-soon','main-uptrend','watchlist','market-status']）；stock_daily_close 完成后广播 `stock-daily-close`（FR-106 (b)，与上同 affectedBoards）；contracts/realtime-events.md 详见两个 EventKind
 - [ ] T085 [US2] 实现 A 股休市日跳过逻辑（FR-124 `skipped: A-share holiday` 审计）
 - [ ] T086 [US2] Vercel 侧添加 `app/api/dashboard/data-status/route.ts` 返回最近一次成功抓取时间戳（用于 FR-023 "数据截止至" 提示）
 - [ ] T087 [US2] 完成 `sealos/scheduler/Dockerfile` + `sealos-deploy.yml` 的 ENV 列表（SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / DEEPSEEK_API_KEY / AKTOOLS_BASE_URL / TZ=Asia/Shanghai）
@@ -275,7 +275,7 @@
 
 ### Implementation for User Story 6
 
-- [ ] T134 [US6] 实现 `sealos/scheduler/jobs/news_fetch.py`（AkShare `stock_telegraph_cls`，按 `(source, externalId)` 去重）
+- [ ] T134 [US6] 实现 `sealos/scheduler/jobs/news_fetch.py`（AkShare `stock_telegraph_cls`，按 `(source, externalId)` 去重）；落库成功后调 `realtime/publish.py` 广播 `news-fetch-done`（FR-106 (c)；affectedBoards=['news-list']；与后续 news-summary-done 解耦，使新闻列表能在原文落库瞬间刷新）
 - [ ] T135 [US6] 实现 `sealos/scheduler/jobs/news_summary.py`（聚合 24h 全量 → DeepSeek → 写 `ai_artifacts(kind=news-summary)`）
 - [ ] T136 [US6] news_summary 后广播 `news-summary-done`
 - [ ] T137 [US6] 注册 4 个 cron：随 stock_daily 同发 + 21:00 + 06:00（FR-030）

@@ -225,7 +225,8 @@ type RealtimeState = {
 
 ## 调试 / 观测
 
-- Scheduler 侧每次广播同时写一条 `audit_logs(kind='realtime-broadcast')`
-  （可选；本期若担心 audit 表膨胀可省）
+- Scheduler 侧**默认不**为每次 Realtime 广播写额外的 `audit_logs(kind='realtime-broadcast')`
+  ——同事件已由各 job 自身的 `audit_logs(kind='stock_daily_close' | 'ai-midday' | …)` 留痕，无需重复。
+  仅当排查 Realtime 缺投递问题时，由 env flag `AUDIT_REALTIME_BROADCAST=1` 临时开启。
 - 前端 `realtimeSlice.lastEventAt` 暴露给 Dashboard 顶部的小字"上次推送
   XX 秒前"（调试用，可通过 env flag 开关）
