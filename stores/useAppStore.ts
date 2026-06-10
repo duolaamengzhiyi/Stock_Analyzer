@@ -5,11 +5,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { createAuthSlice, type AuthSlice } from "./slices/authSlice";
 import { createCacheSlice, type CacheSlice } from "./slices/cacheSlice";
 import { createRealtimeSlice, type RealtimeSlice } from "./slices/realtimeSlice";
 import { createUiSlice, type UiSlice } from "./slices/uiSlice";
 
-export type AppState = CacheSlice & UiSlice & RealtimeSlice;
+export type AppState = CacheSlice & UiSlice & RealtimeSlice & AuthSlice;
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -17,6 +18,7 @@ export const useAppStore = create<AppState>()(
       ...createCacheSlice(set, get, api),
       ...createUiSlice(set, get, api),
       ...createRealtimeSlice(set, get, api),
+      ...createAuthSlice(set, get, api),
     }),
     {
       name: "stock-analyzer-app",
@@ -26,6 +28,7 @@ export const useAppStore = create<AppState>()(
         sideNavExpanded: state.sideNavExpanded,
         theme: state.theme,
         bannerDismissed: state.bannerDismissed,
+        rememberMe: state.rememberMe,
       }),
     },
   ),

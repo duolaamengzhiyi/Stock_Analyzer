@@ -560,6 +560,36 @@ Sealos 控制台 → `scheduler` App → 点 Pause。恢复时点 Resume。
 
 ---
 
+## [8] User Story 验收记录
+
+### [8.1] US1 邀请码注册登录闭环 — sm / lg 断点验收（T073b · 2026-06-10）
+
+**前置**：本机 `pnpm dev`（端口 3010）；Supabase 已迁移；浏览器 chrome-devtools-mcp。
+
+| 场景 | 断点 | 截图 | 通过项 |
+|---|---|---|---|
+| 首页 hero（未登录） | lg 1280×800 | `docs/screenshots/us1-home-lg.png` | 渐变背景 + Stock Analyzer 标题 + "登录 / 注册" 按钮 + 免责声明，无溢出无水平滚动 |
+| 首页 hero（未登录） | sm 375×800 | `docs/screenshots/us1-home-sm.png` | 标题自适应 `text-4xl/5xl` 切换；按钮 size=lg 仍居中；纵向无截断 |
+| AuthModal 登录态 | lg | `docs/screenshots/us1-modal-login-lg.png` | MagicCard 半透明 + 登录/注册 Tab + 邮箱/密码字段 + "7 天内免登录" 复选 + Close 按钮 |
+| AuthModal 注册态 | lg | `docs/screenshots/us1-modal-register-lg.png` | 邀请码字段额外出现 + helper 文本 `本期邀请码：violet-everGarden（开发期可见，生产隐藏）`；账号名字段独立分行 |
+| AuthModal 注册态 | sm | `docs/screenshots/us1-modal-register-sm.png` | 弹窗 `sm:max-w-md` 自适应；字段单列；Close 按钮可触达 |
+| 未登录访问 `/dashboard` | sm | `docs/screenshots/us1-redirect-sm.png` | 自动 302 到 `/?redirect=%2Fdashboard&login=1`，Modal 自动展开（FR-005） |
+| 未登录访问 `/dashboard` | lg | `docs/screenshots/us1-redirect-lg.png` | 同上 |
+
+**控制台**：DevTools console 在两个断点全程 0 error / 0 warning。
+
+**a11y/触达性**：
+- 所有 input 关联了 `<Label for>`，键盘 Tab 可走完表单
+- 错误文案使用 `role=alert`、注册成功提示使用 `role=status`，屏读器可获取
+- ChangePercent 组件已用 `▲ ▼` + 颜色双编码（FR-055，US3 启用时再实测）
+
+**已知差异点 / 跟进项**：
+- 当前首页 hero 还是静态渐变背景；US9（Phase 12）会替换为 ≥3 组动态背景
+- AuthModal 关闭按钮的图标尺寸在 `radix Dialog` 默认下偏小，记入 polish 候选
+- 没有走完整的"注册 → 邮箱确认 → 登录"端到端实测（需要真实可收的邮箱 + DeepSeek/Aktools 暂未连接）；该路径在 [7.5] 阶段联调时复测
+
+---
+
 ## 总耗时估算
 
 - 熟手走通：**90 分钟**

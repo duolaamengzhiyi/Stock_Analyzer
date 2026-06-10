@@ -112,29 +112,29 @@
 
 ### Tests for User Story 1
 
-- [ ] T057 [P] [US1] 测试：`POST /api/auth/register` 端点契约（错误邀请码、邮箱格式非法、账号名正则不合法、重复邮箱、重复账号名、注册并发互斥），并断言成功响应包含 FR-009"请前往邮箱完成确认"提示，用例 `tests/integration/api/auth-register.test.ts`
-- [ ] T058 [P] [US1] 测试：`POST /api/auth/login` 端点契约（邮箱 + 密码登录、统一错误文案 FR-007、邮箱未确认时返回 FR-009 文案、7 天免登录 cookie 签发），`tests/integration/api/auth-login.test.ts`
-- [ ] T059 [P] [US1] 测试：`POST /api/auth/logout` 端点契约（短期 session + long-lived token 同步失效 FR-006），`tests/integration/api/auth-logout.test.ts`
-- [ ] T060 [P] [US1] 测试：`middleware.ts` 拦截 `/dashboard` /watchlist/news 三条路径并重定向，`tests/unit/middleware.test.ts`
-- [ ] T061 [P] [US1] 测试：`stores/slices/authSlice.ts` action 与 selector，`tests/unit/stores/auth-slice.test.ts`
-- [ ] T062 [P] [US1] 测试：`auth-modal` 组件渲染 + MagicCard + 错误行内提示，`tests/unit/components/auth-modal.test.tsx`
-- [ ] T062a [P] [US1] 测试：`GET /auth/callback` 路由（FR-009 邮箱确认回跳）—— 携带合法 `code` → `exchangeCodeForSession` 成功 → 重定向到 `redirect` 参数指定地址（缺省回 `/dashboard`）；缺失或非法 `code` → 重定向回首页并打开登录弹窗，`tests/integration/api/auth-callback.test.ts`
+- [X] T057 [P] [US1] 测试：`POST /api/auth/register` 端点契约（错误邀请码、邮箱格式非法、账号名正则不合法、重复邮箱、重复账号名、注册并发互斥），并断言成功响应包含 FR-009"请前往邮箱完成确认"提示，用例 `tests/integration/api/auth-register.test.ts`
+- [X] T058 [P] [US1] 测试：`POST /api/auth/login` 端点契约（邮箱 + 密码登录、统一错误文案 FR-007、邮箱未确认时返回 FR-009 文案、7 天免登录 cookie 签发），`tests/integration/api/auth-login.test.ts`
+- [X] T059 [P] [US1] 测试：`POST /api/auth/logout` 端点契约（短期 session + long-lived token 同步失效 FR-006），`tests/integration/api/auth-logout.test.ts`
+- [X] T060 [P] [US1] 测试：`middleware.ts` 拦截 `/dashboard` /watchlist/news 三条路径并重定向，`tests/unit/middleware.test.ts`
+- [X] T061 [P] [US1] 测试：`stores/slices/authSlice.ts` action 与 selector，`tests/unit/stores/auth-slice.test.ts`
+- [X] T062 [P] [US1] 测试：`auth-modal` 组件渲染 + MagicCard + 错误行内提示，`tests/unit/components/auth-modal.test.tsx`
+- [X] T062a [P] [US1] 测试：`GET /auth/callback` 路由（FR-009 邮箱确认回跳）—— 携带合法 `code` → `exchangeCodeForSession` 成功 → 重定向到 `redirect` 参数指定地址（缺省回 `/dashboard`）；缺失或非法 `code` → 重定向回首页并打开登录弹窗，`tests/integration/api/auth-callback.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T063 [P] [US1] 创建 `stores/slices/authSlice.ts`（user / sessionState / rememberMe）
-- [ ] T064 [P] [US1] 创建 `lib/supabase/auth.ts` 包装真实邮箱注册/登录：`signUp({ email, password, options: { emailRedirectTo: <SITE_URL>/auth/callback } })` 与 `signInWithPassword({ email, password })`；email 在入参前必须 trim + 小写规范化；同时暴露 `getSession` / `signOut` / `exchangeCodeForSession` 工具函数（FR-002、FR-009、spec.md Assumptions「认证库选型」）
-- [ ] T065 [P] [US1] 创建 `lib/auth/long-lived-token.ts`（生成 raw token + SHA-256 hash 入 `long_lived_tokens` 表，签发/验证/吊销）
-- [ ] T066 [US1] 实现 `app/api/auth/register/route.ts`：FR-002 校验邀请码严格等于 `violet-everGarden` + 校验邮箱格式 + trim 小写规范化、FR-003 由 Supabase Auth 负责密码散列（不在业务层明文留存）、FR-008 账号名正则 `^[A-Za-z0-9_-]{3,20}$` 服务端校验 + 小写规范化、并发互斥处理 spec Edge Case「注册并发」（同邮箱或同账号名极短时间内重复注册的后一次返回唯一性冲突）；调用 `lib/supabase/auth.ts` 的 `signUp` 后将 `account_name` 与 `auth.user.id` 一并写入 `profiles` 表；响应体须返回 FR-009 要求的"请前往邮箱完成确认"提示（依赖 T064）
-- [ ] T067 [US1] 实现 `app/api/auth/login/route.ts`：FR-004 7 天免登录 + FR-007 统一错误"邮箱或密码错误" + 审计日志；当 Supabase 返回 `email_not_confirmed` 错误时改为返回 FR-009 文案"请先完成邮箱确认"且不视为登录成功（依赖 T064、T065）
-- [ ] T068 [US1] 实现 `app/api/auth/logout/route.ts`（FR-006 双凭证失效、清 cookie）（依赖 T065）
-- [ ] T069 [US1] 完成 `middleware.ts` 完整逻辑：拦截 `(app)` 路由组、解析 `redirect` 参数、刷新 Supabase session、读取 `llt_token` 自动续期（FR-005）
-- [ ] T070 [P] [US1] 创建 `hooks/useAuth.ts` 暴露 `register/login/logout/session`
-- [ ] T071 [US1] 实现 `app/(public)/layout.tsx` 与 `app/(public)/page.tsx` 首页基础版（含"登录/注册"按钮触发弹窗）
-- [ ] T072 [US1] 实现 `app/(auth)/_modals/auth-modal.tsx`（MagicCard 半透明弹窗、Tab 切换注册/登录、FR-001）（依赖 T070）
-- [ ] T073 [US1] 实现 `app/(app)/layout.tsx` 登录后路由组壳 + 401 时回弹首页（FR-005 配合 T069）
-- [ ] T073a [US1] 实现 `app/auth/callback/route.ts`（FR-009 邮箱确认回跳）：`GET` 处理 Supabase 回跳的 `code` 与 `redirect` 查询参数，调用 T064 暴露的 `exchangeCodeForSession(code)` 建立服务端 session（用 `@supabase/ssr` 写 cookie），成功则 302 到 `redirect` 指定路径（缺省 `/dashboard`），失败则 302 回 `/?login=1` 并附带统一错误提示；同时落审计日志（依赖 T064）
-- [ ] T073b [US1] 在 sm（≤640 px）与 lg（≥1024 px）两个断点下手动验证首页 + 登录弹窗 + (app) layout 的渲染、滚动与触达性（FR-110），将截图与差异点附加到 quickstart.md 验收章节
+- [X] T063 [P] [US1] 创建 `stores/slices/authSlice.ts`（user / sessionState / rememberMe）
+- [X] T064 [P] [US1] 创建 `lib/supabase/auth.ts` 包装真实邮箱注册/登录：`signUp({ email, password, options: { emailRedirectTo: <SITE_URL>/auth/callback } })` 与 `signInWithPassword({ email, password })`；email 在入参前必须 trim + 小写规范化；同时暴露 `getSession` / `signOut` / `exchangeCodeForSession` 工具函数（FR-002、FR-009、spec.md Assumptions「认证库选型」）
+- [X] T065 [P] [US1] 创建 `lib/auth/long-lived-token.ts`（生成 raw token + SHA-256 hash 入 `long_lived_tokens` 表，签发/验证/吊销）
+- [X] T066 [US1] 实现 `app/api/auth/register/route.ts`：FR-002 校验邀请码严格等于 `violet-everGarden` + 校验邮箱格式 + trim 小写规范化、FR-003 由 Supabase Auth 负责密码散列（不在业务层明文留存）、FR-008 账号名正则 `^[A-Za-z0-9_-]{3,20}$` 服务端校验 + 小写规范化、并发互斥处理 spec Edge Case「注册并发」（同邮箱或同账号名极短时间内重复注册的后一次返回唯一性冲突）；调用 `lib/supabase/auth.ts` 的 `signUp` 后将 `account_name` 与 `auth.user.id` 一并写入 `profiles` 表；响应体须返回 FR-009 要求的"请前往邮箱完成确认"提示（依赖 T064）
+- [X] T067 [US1] 实现 `app/api/auth/login/route.ts`：FR-004 7 天免登录 + FR-007 统一错误"邮箱或密码错误" + 审计日志；当 Supabase 返回 `email_not_confirmed` 错误时改为返回 FR-009 文案"请先完成邮箱确认"且不视为登录成功（依赖 T064、T065）
+- [X] T068 [US1] 实现 `app/api/auth/logout/route.ts`（FR-006 双凭证失效、清 cookie）（依赖 T065）
+- [X] T069 [US1] 完成 `middleware.ts` 完整逻辑：拦截 `(app)` 路由组、解析 `redirect` 参数、刷新 Supabase session、读取 `llt_token` 自动续期（FR-005）
+- [X] T070 [P] [US1] 创建 `hooks/useAuth.ts` 暴露 `register/login/logout/session`
+- [X] T071 [US1] 实现 `app/(public)/layout.tsx` 与 `app/(public)/page.tsx` 首页基础版（含"登录/注册"按钮触发弹窗）
+- [X] T072 [US1] 实现 `app/(auth)/_modals/auth-modal.tsx`（MagicCard 半透明弹窗、Tab 切换注册/登录、FR-001）（依赖 T070）
+- [X] T073 [US1] 实现 `app/(app)/layout.tsx` 登录后路由组壳 + 401 时回弹首页（FR-005 配合 T069）
+- [X] T073a [US1] 实现 `app/auth/callback/route.ts`（FR-009 邮箱确认回跳）：`GET` 处理 Supabase 回跳的 `code` 与 `redirect` 查询参数，调用 T064 暴露的 `exchangeCodeForSession(code)` 建立服务端 session（用 `@supabase/ssr` 写 cookie），成功则 302 到 `redirect` 指定路径（缺省 `/dashboard`），失败则 302 回 `/?login=1` 并附带统一错误提示；同时落审计日志（依赖 T064）
+- [X] T073b [US1] 在 sm（≤640 px）与 lg（≥1024 px）两个断点下手动验证首页 + 登录弹窗 + (app) layout 的渲染、滚动与触达性（FR-110），将截图与差异点附加到 quickstart.md 验收章节
 
 **Checkpoint**: US1 独立可运行——访客可注册/登录/登出，邮箱确认链接点击后建立 session 跳转 Dashboard，7 天免登录持久化，受保护路由被正确拦截。
 
