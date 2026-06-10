@@ -12,7 +12,7 @@ spec:
   ports:
     - port: 8000
       protocol: TCP
-      exposes: false # Scheduler 不对外暴露 HTTP，仅供内部健康检查；如需 webhook 再开
+      exposes: true # Scheduler 暴露 /trigger/* 与 /jobs（X-Scheduler-Token 鉴权），供运维手动触发
   resources:
     cpu: 500m
     memory: 1Gi
@@ -49,6 +49,11 @@ spec:
         secretKeyRef:
           name: stock-scheduler-secrets
           key: AKTOOLS_BASE_URL
+    - name: SCHEDULER_AUTH_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: stock-scheduler-secrets
+          key: SCHEDULER_AUTH_TOKEN
   livenessProbe:
     httpGet:
       path: /healthz

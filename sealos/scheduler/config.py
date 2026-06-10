@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     # AKTools (Sealos 自部署的 akfamily/aktools)
     aktools_base_url: str = Field(..., alias="AKTOOLS_BASE_URL")
 
+    # /trigger/* 端点鉴权令牌（运维手动触发 job 用）
+    scheduler_auth_token: str = Field(
+        "dev-only-token", alias="SCHEDULER_AUTH_TOKEN"
+    )
+
     # 时区固定 Asia/Shanghai
     tz: str = Field("Asia/Shanghai", alias="TZ")
 
