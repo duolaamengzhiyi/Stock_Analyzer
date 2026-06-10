@@ -74,7 +74,7 @@
 - [X] T031 执行 `pnpm db:generate` 派生首版 SQL migration 到 `lib/db/migrations/0000_*.sql`（依赖 T029）
 - [X] T032 在 `lib/db/migrations/0001_rls_policies.sql` 手写 RLS 策略（按 data-model.md 各表 RLS 段）
 - [X] T033 在 `lib/db/migrations/0002_seed_invite_codes.sql` 写入种子 `INSERT INTO invite_codes(code, reusable) VALUES ('violet-everGarden', true)`
-- [ ] T034 执行 `pnpm db:migrate` 应用全部 migration 到 Supabase（依赖 T031–T033）
+- [X] T034 执行 `pnpm db:migrate` 应用全部 migration 到 Supabase（依赖 T031–T033）
 - [X] T035 [P] 创建 `lib/supabase/client.ts`（浏览器 anon client）
 - [X] T036 [P] 创建 `lib/supabase/server.ts`（@supabase/ssr Server Component / Route Handler client）
 - [X] T037 [P] 创建 `lib/supabase/middleware.ts`（session 刷新 helper）
