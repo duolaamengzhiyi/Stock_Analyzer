@@ -148,23 +148,23 @@
 
 ### Tests for User Story 2
 
-- [ ] T074 [P] [US2] 测试：`sealos/scheduler/jobs/stock_daily.py` 11:30/15:15 抓取，`sealos/scheduler/tests/test_stock_daily.py`（respx mock AKTools）
-- [ ] T075 [P] [US2] 测试：`sealos/scheduler/jobs/initial_backfill.py` 幂等性（`backfill_completed` 标志 / 表非空时跳过 FR-024），`sealos/scheduler/tests/test_initial_backfill.py`
-- [ ] T076 [P] [US2] 测试：`sealos/scheduler/jobs/cleanup.py` 60 日滚动 + `news_items` 7 日滚动（FR-022 / FR-031），`sealos/scheduler/tests/test_cleanup.py`
-- [ ] T077 [P] [US2] 测试：`sealos/scheduler/jobs/calendar_refresh.py` 5 市场日历刷新覆盖 180+30 天（FR-120 / SC-052），`sealos/scheduler/tests/test_calendar_refresh.py`
-- [ ] T078 [P] [US2] 测试：失败 → audit_log + 既有数据不被覆盖（FR-023），`sealos/scheduler/tests/test_failure_isolation.py`
+- [X] T074 [P] [US2] 测试：`sealos/scheduler/jobs/stock_daily.py` 11:30/15:15 抓取，`sealos/scheduler/tests/test_stock_daily.py`（respx mock AKTools）
+- [X] T075 [P] [US2] 测试：`sealos/scheduler/jobs/initial_backfill.py` 幂等性（`backfill_completed` 标志 / 表非空时跳过 FR-024），`sealos/scheduler/tests/test_initial_backfill.py`
+- [X] T076 [P] [US2] 测试：`sealos/scheduler/jobs/cleanup.py` 60 日滚动 + `news_items` 7 日滚动（FR-022 / FR-031），`sealos/scheduler/tests/test_cleanup.py`
+- [X] T077 [P] [US2] 测试：`sealos/scheduler/jobs/calendar_refresh.py` 5 市场日历刷新覆盖 180+30 天（FR-120 / SC-052），`sealos/scheduler/tests/test_calendar_refresh.py`
+- [X] T078 [P] [US2] 测试：失败 → audit_log + 既有数据不被覆盖（FR-023），`sealos/scheduler/tests/test_failure_isolation.py`
 
 ### Implementation for User Story 2
 
-- [ ] T079 [US2] 实现 `sealos/scheduler/jobs/stock_daily.py`（`stock_daily_midday` + `stock_daily_close`，调 AKTools `stock_zh_a_spot_em`，写 `stock_daily` 与 `stocks`）
-- [ ] T080 [US2] 实现 `sealos/scheduler/jobs/initial_backfill.py`（AKShare `stock_zh_a_hist` 拉最近 60 交易日，写一次性标志位）
-- [ ] T081 [US2] 实现 `sealos/scheduler/jobs/calendar_refresh.py`（AkShare `tool_trade_date_hist_sina` + pandas-market-calendars，5 市场写入 `market_calendar`）；UPSERT 完成后调 `realtime/publish.py` 广播 `calendar-refresh-done`（FR-106 (g)；affectedBoards=['market-status']；contracts/sealos-jobs.md `calendar_refresh` 第 6 步）
-- [ ] T082 [US2] 实现 `sealos/scheduler/jobs/cleanup.py`（`stock_daily` 60 交易日、`news_items` 7 天；保留 `ai_artifacts` 不动，FR-052）
-- [ ] T083 [US2] 在 `sealos/scheduler/main.py` 注册以上 4 个 job：cron `30 11 * * 1-5` / `15 15 * * 1-5` + 启动时一次 backfill+calendar
-- [ ] T084 [US2] 实现 stock_daily_midday 完成后调 `realtime/publish.py` 广播 `stock-daily-midday`（FR-106 (a)；affectedBoards=['indices','launching-soon','main-uptrend','watchlist','market-status']）；stock_daily_close 完成后广播 `stock-daily-close`（FR-106 (b)，与上同 affectedBoards）；contracts/realtime-events.md 详见两个 EventKind
-- [ ] T085 [US2] 实现 A 股休市日跳过逻辑（FR-124 `skipped: A-share holiday` 审计）
-- [ ] T086 [US2] Vercel 侧添加 `app/api/dashboard/data-status/route.ts` 返回最近一次成功抓取时间戳（用于 FR-023 "数据截止至" 提示）
-- [ ] T087 [US2] 完成 `sealos/scheduler/Dockerfile` + `sealos-deploy.yml` 的 ENV 列表（SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / DEEPSEEK_API_KEY / AKTOOLS_BASE_URL / TZ=Asia/Shanghai）
+- [X] T079 [US2] 实现 `sealos/scheduler/jobs/stock_daily.py`（`stock_daily_midday` + `stock_daily_close`，调 AKTools `stock_zh_a_spot_em`，写 `stock_daily` 与 `stocks`）
+- [X] T080 [US2] 实现 `sealos/scheduler/jobs/initial_backfill.py`（AKShare `stock_zh_a_hist` 拉最近 60 交易日，写一次性标志位）
+- [X] T081 [US2] 实现 `sealos/scheduler/jobs/calendar_refresh.py`（AkShare `tool_trade_date_hist_sina` + pandas-market-calendars，5 市场写入 `market_calendar`）；UPSERT 完成后调 `realtime/publish.py` 广播 `calendar-refresh-done`（FR-106 (g)；affectedBoards=['market-status']；contracts/sealos-jobs.md `calendar_refresh` 第 6 步）
+- [X] T082 [US2] 实现 `sealos/scheduler/jobs/cleanup.py`（`stock_daily` 60 交易日、`news_items` 7 天；保留 `ai_artifacts` 不动，FR-052）
+- [X] T083 [US2] 在 `sealos/scheduler/main.py` 注册以上 4 个 job：cron `30 11 * * 1-5` / `15 15 * * 1-5` + 启动时一次 backfill+calendar
+- [X] T084 [US2] 实现 stock_daily_midday 完成后调 `realtime/publish.py` 广播 `stock-daily-midday`（FR-106 (a)；affectedBoards=['indices','launching-soon','main-uptrend','watchlist','market-status']）；stock_daily_close 完成后广播 `stock-daily-close`（FR-106 (b)，与上同 affectedBoards）；contracts/realtime-events.md 详见两个 EventKind
+- [X] T085 [US2] 实现 A 股休市日跳过逻辑（FR-124 `skipped: A-share holiday` 审计）
+- [X] T086 [US2] Vercel 侧添加 `app/api/dashboard/data-status/route.ts` 返回最近一次成功抓取时间戳（用于 FR-023 "数据截止至" 提示）
+- [X] T087 [US2] 完成 `sealos/scheduler/Dockerfile` + `sealos-deploy.yml` 的 ENV 列表（SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / DEEPSEEK_API_KEY / AKTOOLS_BASE_URL / SCHEDULER_AUTH_TOKEN / TZ=Asia/Shanghai）
 
 **Checkpoint**: US2 独立可运行——Sealos 按时抓取，DB 每日有新行，60 日窗口稳定，失败被审计。
 
