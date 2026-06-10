@@ -57,48 +57,48 @@
 
 **Purpose**: Drizzle schema + RLS + Supabase client + Zustand 根 store + 路由拦截壳 + 共享 UI 原语 + Realtime/Calendar 工具。**所有 12 张表 schema 必须先落，否则 US1 之后没有数据底座**。
 
-- [ ] T017 [P] 创建 `lib/db/schema/profiles.ts`（data-model.md §1）
-- [ ] T018 [P] 创建 `lib/db/schema/long-lived-tokens.ts`（§2）
-- [ ] T019 [P] 创建 `lib/db/schema/invite-codes.ts`（§3）
-- [ ] T020 [P] 创建 `lib/db/schema/stocks.ts`（§4）
-- [ ] T021 [P] 创建 `lib/db/schema/stock-daily.ts`（§5）
-- [ ] T022 [P] 创建 `lib/db/schema/stock-screen-results.ts`（§6）
-- [ ] T023 [P] 创建 `lib/db/schema/watchlist-items.ts`（§7）
-- [ ] T024 [P] 创建 `lib/db/schema/news-items.ts`（§8）
-- [ ] T025 [P] 创建 `lib/db/schema/ai-artifacts.ts`（§9）
-- [ ] T026 [P] 创建 `lib/db/schema/sector-picks.ts`（§10）
-- [ ] T027 [P] 创建 `lib/db/schema/market-calendar.ts`（§11）
-- [ ] T028 [P] 创建 `lib/db/schema/audit-logs.ts`（§12）
-- [ ] T029 创建 `lib/db/schema/index.ts` 汇总导出（依赖 T017–T028）
-- [ ] T030 创建 `lib/db/index.ts`（postgres-js + drizzle 客户端，使用 `POSTGRES_URL`）
-- [ ] T031 执行 `pnpm db:generate` 派生首版 SQL migration 到 `lib/db/migrations/0000_*.sql`（依赖 T029）
-- [ ] T032 在 `lib/db/migrations/0001_rls_policies.sql` 手写 RLS 策略（按 data-model.md 各表 RLS 段）
-- [ ] T033 在 `lib/db/migrations/0002_seed_invite_codes.sql` 写入种子 `INSERT INTO invite_codes(code, reusable) VALUES ('violet-everGarden', true)`
+- [X] T017 [P] 创建 `lib/db/schema/profiles.ts`（data-model.md §1）
+- [X] T018 [P] 创建 `lib/db/schema/long-lived-tokens.ts`（§2）
+- [X] T019 [P] 创建 `lib/db/schema/invite-codes.ts`（§3）
+- [X] T020 [P] 创建 `lib/db/schema/stocks.ts`（§4）
+- [X] T021 [P] 创建 `lib/db/schema/stock-daily.ts`（§5）
+- [X] T022 [P] 创建 `lib/db/schema/stock-screen-results.ts`（§6）
+- [X] T023 [P] 创建 `lib/db/schema/watchlist-items.ts`（§7）
+- [X] T024 [P] 创建 `lib/db/schema/news-items.ts`（§8）
+- [X] T025 [P] 创建 `lib/db/schema/ai-artifacts.ts`（§9）
+- [X] T026 [P] 创建 `lib/db/schema/sector-picks.ts`（§10）
+- [X] T027 [P] 创建 `lib/db/schema/market-calendar.ts`（§11）
+- [X] T028 [P] 创建 `lib/db/schema/audit-logs.ts`（§12）
+- [X] T029 创建 `lib/db/schema/index.ts` 汇总导出（依赖 T017–T028）
+- [X] T030 创建 `lib/db/index.ts`（postgres-js + drizzle 客户端，使用 `POSTGRES_URL`）
+- [X] T031 执行 `pnpm db:generate` 派生首版 SQL migration 到 `lib/db/migrations/0000_*.sql`（依赖 T029）
+- [X] T032 在 `lib/db/migrations/0001_rls_policies.sql` 手写 RLS 策略（按 data-model.md 各表 RLS 段）
+- [X] T033 在 `lib/db/migrations/0002_seed_invite_codes.sql` 写入种子 `INSERT INTO invite_codes(code, reusable) VALUES ('violet-everGarden', true)`
 - [ ] T034 执行 `pnpm db:migrate` 应用全部 migration 到 Supabase（依赖 T031–T033）
-- [ ] T035 [P] 创建 `lib/supabase/client.ts`（浏览器 anon client）
-- [ ] T036 [P] 创建 `lib/supabase/server.ts`（@supabase/ssr Server Component / Route Handler client）
-- [ ] T037 [P] 创建 `lib/supabase/middleware.ts`（session 刷新 helper）
-- [ ] T038 [P] 创建 `lib/supabase/admin.ts`（service_role client，仅服务端可用）
-- [ ] T039 创建 `middleware.ts` 在仓库根，引用 `lib/supabase/middleware.ts`，框架性实现"未登录访问受保护路由 → 重定向 `/?redirect=…`"（FR-005 占位，US1 phase 内补完）
-- [ ] T040 [P] 创建 `stores/useAppStore.ts` 根 store（combine slices）
-- [ ] T041 [P] 创建 `stores/slices/cacheSlice.ts`（key+TTL 通用缓存，FR-061 / FR-107）
-- [ ] T042 [P] 创建 `stores/slices/uiSlice.ts`（侧栏、主题、横幅关闭，含 persist+partialize）
-- [ ] T043 [P] 创建 `stores/slices/realtimeSlice.ts` 骨架（连接状态机，US 各 phase 内补 reducer）
-- [ ] T044 [P] 创建 `lib/realtime/channels.ts` 频道名常量 + payload TS 类型（contracts/realtime-events.md "事件枚举"）
-- [ ] T045 [P] 创建 `lib/market-calendar/is-trading-day.ts` 与 `last-trading-day.ts`（读 `market_calendar` 表）
-- [ ] T046 [P] 用 shadcn CLI 添加共用原语：Button / Input / Dialog / Toast / Skeleton / Tooltip / Popover / DropdownMenu / Form 到 `components/ui/`
-- [ ] T047 [P] 创建 `components/magic/MagicCard.tsx` / `NumberTicker.tsx` / `Marquee.tsx` / `BentoGrid.tsx` 薄封装（Magic UI MCP）
-- [ ] T048 [P] 创建 `components/shared/StockBadge.tsx` + `ChangePercent.tsx`（涨红跌绿、FR-043）
-- [ ] T049 [P] 创建 `lib/utils/cn.ts`（clsx + tailwind-merge）与 `lib/utils/zod-schemas.ts`（账号名/密码/股票代码 schema）
-- [ ] T050 [P] 创建 `sealos/scheduler/main.py` FastAPI 入口 + APScheduler 配置（Asia/Shanghai 时区）
-- [ ] T051 [P] 创建 `sealos/scheduler/clients/supabase.py`（supabase-py service_role 封装）
-- [ ] T052 [P] 创建 `sealos/scheduler/clients/aktools.py`（httpx → Sealos AKTools URL 封装）
-- [ ] T053 [P] 创建 `sealos/scheduler/clients/deepseek.py`（OpenAI SDK 指向 DeepSeek 兼容端点，默认 `deepseek-v4-pro`，与 plan.md "Constraints"段保持一致）
-- [ ] T053a [P] 创建 `lib/deepseek/client.ts`（Vercel 侧 OpenAI 兼容 SDK 客户端，指向 DeepSeek 端点；默认模型 `deepseek-v4-pro`，与 T053 / plan.md "Constraints" 段保持一致；同时提供同步与流式 SSE 调用包装；从 `process.env.DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL` 读取配置）
-- [ ] T053b [P] 创建 `lib/deepseek/prompts.ts`（Vercel 侧供个股 AI 介绍 / 个股 AI 分析复用的 prompt 模板：`stock-intro` / `stock-analysis`；与 `sealos` 侧模板字符串保持口径一致，便于 US7 弹窗直读，FR-051）
-- [ ] T054 [P] 创建 `sealos/scheduler/realtime/publish.py`（用 supabase-py 调 `realtime.send` 广播事件）
-- [ ] T055 [P] 创建 `sealos/scheduler/audit.py` 写入 `audit_logs` 工具
-- [ ] T056 [P] 创建 `sealos/scheduler/config.py` 从环境变量读取所有 URL/Key
+- [X] T035 [P] 创建 `lib/supabase/client.ts`（浏览器 anon client）
+- [X] T036 [P] 创建 `lib/supabase/server.ts`（@supabase/ssr Server Component / Route Handler client）
+- [X] T037 [P] 创建 `lib/supabase/middleware.ts`（session 刷新 helper）
+- [X] T038 [P] 创建 `lib/supabase/admin.ts`（service_role client，仅服务端可用）
+- [X] T039 创建 `middleware.ts` 在仓库根，引用 `lib/supabase/middleware.ts`，框架性实现"未登录访问受保护路由 → 重定向 `/?redirect=…`"（FR-005 占位，US1 phase 内补完）
+- [X] T040 [P] 创建 `stores/useAppStore.ts` 根 store（combine slices）
+- [X] T041 [P] 创建 `stores/slices/cacheSlice.ts`（key+TTL 通用缓存，FR-061 / FR-107）
+- [X] T042 [P] 创建 `stores/slices/uiSlice.ts`（侧栏、主题、横幅关闭，含 persist+partialize）
+- [X] T043 [P] 创建 `stores/slices/realtimeSlice.ts` 骨架（连接状态机，US 各 phase 内补 reducer）
+- [X] T044 [P] 创建 `lib/realtime/channels.ts` 频道名常量 + payload TS 类型（contracts/realtime-events.md "事件枚举"）
+- [X] T045 [P] 创建 `lib/market-calendar/is-trading-day.ts` 与 `last-trading-day.ts`（读 `market_calendar` 表）
+- [X] T046 [P] 用 shadcn CLI 添加共用原语：Button / Input / Dialog / Toast / Skeleton / Tooltip / Popover / DropdownMenu / Form 到 `components/ui/`
+- [X] T047 [P] 创建 `components/magic/MagicCard.tsx` / `NumberTicker.tsx` / `Marquee.tsx` / `BentoGrid.tsx` 薄封装（Magic UI MCP）
+- [X] T048 [P] 创建 `components/shared/StockBadge.tsx` + `ChangePercent.tsx`（涨红跌绿、FR-043）
+- [X] T049 [P] 创建 `lib/utils/cn.ts`（clsx + tailwind-merge）与 `lib/utils/zod-schemas.ts`（账号名/密码/股票代码 schema）
+- [X] T050 [P] 创建 `sealos/scheduler/main.py` FastAPI 入口 + APScheduler 配置（Asia/Shanghai 时区）
+- [X] T051 [P] 创建 `sealos/scheduler/clients/supabase.py`（supabase-py service_role 封装）
+- [X] T052 [P] 创建 `sealos/scheduler/clients/aktools.py`（httpx → Sealos AKTools URL 封装）
+- [X] T053 [P] 创建 `sealos/scheduler/clients/deepseek.py`（OpenAI SDK 指向 DeepSeek 兼容端点，默认 `deepseek-v4-pro`，与 plan.md "Constraints"段保持一致）
+- [X] T053a [P] 创建 `lib/deepseek/client.ts`（Vercel 侧 OpenAI 兼容 SDK 客户端，指向 DeepSeek 端点；默认模型 `deepseek-v4-pro`，与 T053 / plan.md "Constraints" 段保持一致；同时提供同步与流式 SSE 调用包装；从 `process.env.DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL` 读取配置）
+- [X] T053b [P] 创建 `lib/deepseek/prompts.ts`（Vercel 侧供个股 AI 介绍 / 个股 AI 分析复用的 prompt 模板：`stock-intro` / `stock-analysis`；与 `sealos` 侧模板字符串保持口径一致，便于 US7 弹窗直读，FR-051）
+- [X] T054 [P] 创建 `sealos/scheduler/realtime/publish.py`（用 supabase-py 调 `realtime.send` 广播事件）
+- [X] T055 [P] 创建 `sealos/scheduler/audit.py` 写入 `audit_logs` 工具
+- [X] T056 [P] 创建 `sealos/scheduler/config.py` 从环境变量读取所有 URL/Key
 
 **Checkpoint**: Drizzle schema 已落库；Supabase RLS 已生效；Vercel 与 Sealos 两侧的 client / store / UI 原语 / Realtime / Calendar 工具均就绪，可以开始任意 User Story。
 
